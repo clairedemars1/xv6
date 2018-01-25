@@ -1745,12 +1745,12 @@ rand()
   return randstate;
 }
 
-struct procsinfo{
+struct procsinfo{ //
 	int pid;
 	char* name;
 };
 
-void getprocsinfotest(){
+void getprocsinfotest(){ //
 	// todo
 	
 	struct procsinfo* procs = 0;
@@ -1774,11 +1774,11 @@ main(int argc, char *argv[])
   }
   close(open("usertests.ran", O_CREATE));
 
-  getprocsinfotest();
+  getprocsinfotest(); //
   argptest();
   createdelete();
    
-/*
+/* 					//
   linkunlink();
   concreate();
   fourfiles();

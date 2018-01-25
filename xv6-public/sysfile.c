@@ -451,7 +451,7 @@ struct procinfo {
 };
 
 int
-getprocsinfo(struct procinfo* info){
+getprocsinfo(struct procinfo* info){ //
 	return -1;
 }
 
