@@ -1,0 +1,5 @@
+- make github repo, and go in and mark the chagnes made in usertests.c, sysfile.c, syscall.h, syscall.c
+
+- make a .h file defining the new struct, include it in usertests and sysfile.c
+
+- get new changes to compile
