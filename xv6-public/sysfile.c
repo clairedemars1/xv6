@@ -15,6 +15,7 @@
 #include "sleeplock.h"
 #include "file.h"
 #include "fcntl.h"
+#include "procinfo.h"
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -444,14 +445,7 @@ sys_pipe(void)
   return 0;
 }
 
-
-struct procinfo {
-	int pid;
-	char* pname;
-};
-
 int
-getprocsinfo(struct procinfo* info){ //
+getprocsinfo(struct procinfo* info){
 	return -1;
 }
-

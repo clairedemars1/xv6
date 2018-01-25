@@ -7,6 +7,7 @@
 #include "syscall.h"
 #include "traps.h"
 #include "memlayout.h"
+#include "procinfo.h" //
 
 char buf[8192];
 char name[3];
@@ -1745,15 +1746,10 @@ rand()
   return randstate;
 }
 
-struct procsinfo{ //
-	int pid;
-	char* name;
-};
-
 void getprocsinfotest(){ //
 	// todo
 	
-	struct procsinfo* procs = 0;
+	struct procinfo* procs = 0;
 	int proc_count = getprocsinfo(procs);
 	printf("process count: %i", proc_count);
 	int i;
