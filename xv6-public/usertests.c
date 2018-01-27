@@ -8,6 +8,7 @@
 #include "traps.h"
 #include "memlayout.h"
 #include "procinfo.h" //
+//#include "stdio.h" // 
 
 char buf[8192];
 char name[3];
@@ -1751,10 +1752,10 @@ void getprocsinfotest(){ //
 	
 	struct procinfo* procs = 0;
 	int proc_count = getprocsinfo(procs);
-	printf("process count: %i", proc_count);
+	printf(stdout, "process count: %i", proc_count);
 	int i;
 	for (i=0; i<proc_count; i++){
-		printf("%i, %s\n", procs[i].pid, procs[i].name);
+		printf(stdout, "%i, %s\n", procs[i].pid, procs[i].name);
 	}
 	
 }

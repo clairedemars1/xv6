@@ -3,3 +3,28 @@
 - make a .h file defining the new struct, include it in usertests and sysfile.c
 
 - get new changes to compile
+
+
+/// to ssh
+ssh joey.cs.clemson.edu
+cd Documents/Curr/Ge/xv6/xv6-public
+
+/// 
+Questions
+Q: why are there two verison of each sys call? eg sys_wait() and wait()
+if the sys one is the "in-house, available to system code" and the other the "for users" one, then why does sys_wait() call wait() and not vice versa! (However, sys_chdir does not call chdir)
+
+Q2
+why did they make two versions of printf!!!! C doesn't like it if both used in same file
+
+Q3
+we're using c to make an os, but doesn't c have a bunch of functions in a library, that assume the existence of an os. Circular? eg printf in the stdio prints to device, by calling os functions. Summary of question: how does c print stuff to terminal screen. 
+I guess OS functions must not rely on those parts of C, since those parts of C rely on OS functions
+
+Q4
+functions in user.h, where are they defined?! i can't find it eg sleep(int and open(char* 
+
+
+to exit qemu
+Ctrl-A
+quit

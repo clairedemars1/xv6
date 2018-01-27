@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "procinfo.h"
 
 struct {
   struct spinlock lock;
@@ -531,4 +532,9 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int 
+getprocsinfo(struct procinfo* info){
+	return -1;
 }

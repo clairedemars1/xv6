@@ -1,4 +1,4 @@
 struct procinfo {
 	int pid;
-	char* pname;
+	char* name;
 };

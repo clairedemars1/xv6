@@ -5,6 +5,7 @@
 _*
 *.out
 *.S
+*.img
 mkfs
 bootblock
 entryother
