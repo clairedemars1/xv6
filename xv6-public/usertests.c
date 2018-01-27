@@ -1752,11 +1752,13 @@ void getprocsinfotest(){ //
 	
 	struct procinfo* procs = 0;
 	int proc_count = getprocsinfo(procs);
-	printf(stdout, "process count: %i", proc_count);
+	printf(stdout, "process count: %d\n", proc_count);
 	int i;
 	for (i=0; i<proc_count; i++){
-		printf(stdout, "%i, %s\n", procs[i].pid, procs[i].name);
+		printf(stdout, "inside for");
+		printf(stdout, "%d, %s\n", procs[i].pid, procs[i].name);
 	}
+	printf(stdout, "after for");
 	
 }
 

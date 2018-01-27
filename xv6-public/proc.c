@@ -536,5 +536,5 @@ procdump(void)
 
 int 
 getprocsinfo(struct procinfo* info){
-	return -1;
+	return 42;
 }
