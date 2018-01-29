@@ -91,6 +91,6 @@ sys_uptime(void)
   return xticks;
 }
 
-int sys_getprocsinfo(struct procinfo* info){ // remove?
+int sys_getprocsinfo(struct procinfo* info){
 	return getprocsinfo(info);
 }

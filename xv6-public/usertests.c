@@ -1771,13 +1771,13 @@ main(int argc, char *argv[])
     printf(1, "already ran user tests -- rebuild fs.img\n");
     exit();
   }
-  close(open("usertests.ran", O_CREATE));
+  //close(open("usertests.ran", O_CREATE)); // put me back
 
   getprocsinfotest(); //
   argptest();
   createdelete();
    
-/* 					//
+	/*	//
   linkunlink();
   concreate();
   fourfiles();
@@ -1795,7 +1795,7 @@ main(int argc, char *argv[])
   writetest1();
   createtest();
 
-  openiputtest();
+  openiputtest(); 
   exitiputtest();
   iputtest();
 
@@ -1813,7 +1813,7 @@ main(int argc, char *argv[])
   dirfile();
   iref();
   forktest();
-  //bigdir(); // slow // todo put me back
+  //bigdir(); // slow
 
   uio();
 

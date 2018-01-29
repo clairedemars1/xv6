@@ -503,7 +503,7 @@ kill(int pid)
 // No lock to avoid wedging a stuck machine further.
 void
 procdump(void)
-{
+{	
   static char *states[] = {
   [UNUSED]    "unused",
   [EMBRYO]    "embryo",
@@ -536,5 +536,19 @@ procdump(void)
 
 int 
 getprocsinfo(struct procinfo* info){
-	return 42;
+	int count = 0;
+	struct proc* p;
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+		enum procstate state = p->state;
+		// enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+		if (state == EMBRYO 
+			|| state == SLEEPING
+			|| state == RUNNABLE
+			|| state == RUNNING
+		){
+			count++;
+		}
+	}
+	cprintf("count %d\n", count);
+	return count; // todo
 }
