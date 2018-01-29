@@ -58,6 +58,8 @@ argint(int n, int *ip)
 int
 argptr(int n, char **pp, int size)
 {
+ //~ cprintf("size requested: %d\n", size);
+ 
   int i;
   struct proc *curproc = myproc();
  
@@ -68,6 +70,7 @@ argptr(int n, char **pp, int size)
   *pp = (char*)i;
   return 0;
 }
+
 
 // Fetch the nth word-sized system call argument as a string pointer.
 // Check that the pointer is valid and the string is nul-terminated.

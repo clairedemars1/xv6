@@ -1,13 +1,15 @@
-- make github repo, and go in and mark the chagnes made in usertests.c, sysfile.c, syscall.h, syscall.c
-
-- make a .h file defining the new struct, include it in usertests and sysfile.c
-
-- get new changes to compile
+todo
+- use gdb to look at the array I have, why is it not big enough? 
 
 
 /// to ssh
 ssh joey.cs.clemson.edu
 cd Documents/Curr/Ge/xv6/xv6-public
+
+///
+to exit qemu
+Ctrl-A
+quit
 
 /// 
 Questions
@@ -24,7 +26,9 @@ I guess OS functions must not rely on those parts of C, since those parts of C r
 Q4
 functions in user.h, where are they defined?! i can't find it eg sleep(int and open(char* 
 
+Q5
+getprocsinfo(struct procinfo* info){
+	// assumes info is already allocated by the caller
+	 // where is the interrupt? Is accessing the ptable a priviledged instruction??????
+	 //(?????)
 
-to exit qemu
-Ctrl-A
-quit

@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "procinfo.h"
+//~ #include <stdlib.h> // brings in cnoflicting defs of exit
 
 struct {
   struct spinlock lock;
@@ -536,19 +537,42 @@ procdump(void)
 
 int 
 getprocsinfo(struct procinfo* info){
+	// assumes info is already allocated by the caller
+	 // where is the interrupt? Is accessing the ptable a priviledged instruction??????
 	int count = 0;
+	int max_num_proc = NPROC;
 	struct proc* p;
-	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    acquire(&ptable.lock);
+
+	for(p = ptable.proc; p < &ptable.proc[max_num_proc]; p++){
 		enum procstate state = p->state;
-		// enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 		if (state == EMBRYO 
 			|| state == SLEEPING
 			|| state == RUNNABLE
 			|| state == RUNNING
-		){
+		){ // ignoring processes in states UNUSED and ZOMBIE
+			
+			info[count].pid = p->pid;
+			
+			// copy name
+			//~ info[count].name = p->name; // can't just point to the same address since that memory is kernal-access only
+			char* copy_from = p->name;
+			char* copy_to = info[count].name;
+			int i=0;
+			while( copy_from[i] != '\0'){
+				copy_to[i] = copy_from[i];
+				i++;
+			}
+			copy_to[i] = copy_from[i];
+			
 			count++;
 		}
-	}
-	cprintf("count %d\n", count);
-	return count; // todo
+	}	
+	release(&ptable.lock);
+		
+	//~ info = (struct procinfo*) malloc(count* sizeof(struct procinfo) ); // can't malloc, darn it
+	// note try to use kalloc, to allocate to the kernal, t
+	// to verify that since the usertests are not run in priviledged mode, they can't get to that memory
+	
+	return count;
 }

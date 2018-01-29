@@ -1752,13 +1752,30 @@ void getprocsinfotest(){ //
 	
 	struct procinfo* procs = 0;
 	int proc_count = getprocsinfo(procs);
-	printf(stdout, "process count: %d\n", proc_count);
+	
+	if(proc_count != 3){ printf(stdout, "TEST FAILED"); exit(); }
 	int i;
 	for (i=0; i<proc_count; i++){
-		printf(stdout, "inside for");
-		printf(stdout, "%d, %s\n", procs[i].pid, procs[i].name);
+		printf(stdout, "pid: %d, name: %s\n", procs[i].pid, procs[i].name);
+		//~ printf(stdout, "pid: %d\n", procs[i].pid);
+		//~ printf(stdout, "name: %s\n", procs[i].name);
 	}
-	printf(stdout, "after for");
+	
+	
+	int newProcPid = fork();
+	if(newProcPid < 0){
+		printf(stdout, "fork failed\n");
+		exit();
+	}
+	proc_count = getprocsinfo(procs);
+	if(proc_count != 4){ printf(stdout, "TEST FAILED"); exit(); }
+	for (i=0; i<proc_count; i++){
+		printf(stdout, "pid: %d, name: %s\n", procs[i].pid, procs[i].name);
+		//~ printf(stdout, "pid: %d\n", procs[i].pid);
+		//~ printf(stdout, "name: %s\n", procs[i].name);
+	}
+
+	printf(stdout, "getprocsinfotest passed\n");
 	
 }
 

@@ -91,6 +91,12 @@ sys_uptime(void)
   return xticks;
 }
 
-int sys_getprocsinfo(struct procinfo* info){
-	return getprocsinfo(info);
+int sys_getprocsinfo(void){
+	// todo pull the parameter in as an argptr
+	char* info;
+	cprintf("getting called\n");
+	if ( argptr(0, &info, sizeof(struct procinfo) * NPROC) < 0 ){
+		return -1;
+	}
+	return getprocsinfo( (struct procinfo*) info);
 }
