@@ -92,7 +92,6 @@ sys_uptime(void)
 }
 
 int sys_getprocsinfo(void){
-	// todo pull the parameter in as an argptr
 	char* info;
 	if ( argptr(0, &info, sizeof(struct procinfo) * NPROC) < 0 ){
 		return -1;

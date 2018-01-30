@@ -7,7 +7,6 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "procinfo.h"
-//~ #include <stdlib.h> // brings in cnoflicting defs of exit
 
 struct {
   struct spinlock lock;
@@ -537,7 +536,7 @@ procdump(void)
 
 int 
 getprocsinfo(struct procinfo* info){
-	// assumes info is already allocated by the caller
+	// assumes info is already allocated with 64 slots
 	
 	int count = 0;
 	int max_num_proc = NPROC;
@@ -554,27 +553,14 @@ getprocsinfo(struct procinfo* info){
 			|| state == ZOMBIE
 		){ // ignoring processes in state UNUSED
 			info[count].pid = p->pid;
-			
-			// copy name
-			//~ info[count].name = p->name; // can't just point to the same address since that memory is kernal-access only
-			safestrcpy(info[count].name, p->name, 16);
-			//~ char* copy_from = p->name;
-			//~ char* copy_to = info[count].name;
-			//~ int i=0;
-			//~ while( copy_from[i] != '\0'){
-				//~ copy_to[i] = copy_from[i];
-				//~ i++;
-			//~ }
-			//~ copy_to[i] = copy_from[i];
-			
+			safestrcpy(info[count].name, p->name, 16); // can't point to same address since memory is kernal-access only
 			count++;
 		}
 	}	
 	release(&ptable.lock);
 		
-	//~ info = (struct procinfo*) malloc(count* sizeof(struct procinfo) ); // can't malloc, darn it
-	// note: try to use kalloc, to allocate to the kernal, t
-	// to verify that since the usertests are not run in priviledged mode, they can't get to that memory
-	
+	// note to self: try to use kalloc, to allocate to the kernal
+		// to verify that  it fails (since the usertests are not run in priviledged mode, they can't get to that memory)
+		//~ info = (struct procinfo*) malloc(count* sizeof(struct procinfo) ); 
 	return count;
 }
