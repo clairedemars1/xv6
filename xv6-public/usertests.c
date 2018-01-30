@@ -1756,44 +1756,44 @@ main(int argc, char *argv[])
   }
   close(open("usertests.ran", O_CREATE)); 
 
-  //~ argptest();
-  //~ createdelete();
-   //~ 
-  //~ linkunlink();
-  //~ concreate();
-  //~ fourfiles();
-  //~ sharedfd();
-//~ 
-  //~ bigargtest();
-  //~ bigwrite();
-  //~ bigargtest();
-  //~ bsstest();
+  argptest();
+  createdelete();
+   
+  linkunlink();
+  concreate();
+  fourfiles();
+  sharedfd();
+
+  bigargtest();
+  bigwrite();
+  bigargtest();
+  bsstest();
   sbrktest();
-  //~ validatetest();
-//~ 
-  //~ opentest();
-  //~ writetest();
-  //~ writetest1();
-  //~ createtest();
-//~ 
-  //~ openiputtest(); 
-  //~ exitiputtest();
-  //~ iputtest();
-//~ 
-  //~ mem();
-  //~ pipe1();
-  //~ preempt();
-  //~ exitwait();
-//~ 
-  //~ rmdot();
-  //~ fourteen();
-  //~ bigfile();
-  //~ subdir();
-  //~ linktest();
-  //~ unlinkread();
-  //~ dirfile();
-  //~ iref();
-  //~ forktest();
+  validatetest();
+
+  opentest();
+  writetest();
+  writetest1();
+  createtest();
+
+  openiputtest(); 
+  exitiputtest();
+  iputtest();
+
+  mem();
+  pipe1();
+  preempt();
+  exitwait();
+
+  rmdot();
+  fourteen();
+  bigfile();
+  subdir();
+  linktest();
+  unlinkread();
+  dirfile();
+  iref();
+  forktest();
   //bigdir(); // slow
 
   uio();
