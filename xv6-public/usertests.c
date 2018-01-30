@@ -7,8 +7,6 @@
 #include "syscall.h"
 #include "traps.h"
 #include "memlayout.h"
-#include "procinfo.h" //
-//#include "stdio.h" // 
 
 char buf[8192];
 char name[3];
@@ -1747,38 +1745,6 @@ rand()
   return randstate;
 }
 
-void getprocsinfotest(){ //
-	// todo
-	
-	struct procinfo* procs = 0;
-	int proc_count = getprocsinfo(procs);
-	
-	if(proc_count != 3){ printf(stdout, "TEST FAILED"); exit(); }
-	int i;
-	for (i=0; i<proc_count; i++){
-		printf(stdout, "pid: %d, name: %s\n", procs[i].pid, procs[i].name);
-		//~ printf(stdout, "pid: %d\n", procs[i].pid);
-		//~ printf(stdout, "name: %s\n", procs[i].name);
-	}
-	
-	
-	int newProcPid = fork();
-	if(newProcPid < 0){
-		printf(stdout, "fork failed\n");
-		exit();
-	}
-	proc_count = getprocsinfo(procs);
-	if(proc_count != 4){ printf(stdout, "TEST FAILED"); exit(); }
-	for (i=0; i<proc_count; i++){
-		printf(stdout, "pid: %d, name: %s\n", procs[i].pid, procs[i].name);
-		//~ printf(stdout, "pid: %d\n", procs[i].pid);
-		//~ printf(stdout, "name: %s\n", procs[i].name);
-	}
-
-	printf(stdout, "getprocsinfotest passed\n");
-	
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -1788,53 +1754,50 @@ main(int argc, char *argv[])
     printf(1, "already ran user tests -- rebuild fs.img\n");
     exit();
   }
-  //close(open("usertests.ran", O_CREATE)); // put me back
+  close(open("usertests.ran", O_CREATE)); 
 
-  getprocsinfotest(); //
-  argptest();
-  createdelete();
-   
-	/*	//
-  linkunlink();
-  concreate();
-  fourfiles();
-  sharedfd();
-
-  bigargtest();
-  bigwrite();
-  bigargtest();
-  bsstest();
+  //~ argptest();
+  //~ createdelete();
+   //~ 
+  //~ linkunlink();
+  //~ concreate();
+  //~ fourfiles();
+  //~ sharedfd();
+//~ 
+  //~ bigargtest();
+  //~ bigwrite();
+  //~ bigargtest();
+  //~ bsstest();
   sbrktest();
-  validatetest();
-
-  opentest();
-  writetest();
-  writetest1();
-  createtest();
-
-  openiputtest(); 
-  exitiputtest();
-  iputtest();
-
-  mem();
-  pipe1();
-  preempt();
-  exitwait();
-
-  rmdot();
-  fourteen();
-  bigfile();
-  subdir();
-  linktest();
-  unlinkread();
-  dirfile();
-  iref();
-  forktest();
+  //~ validatetest();
+//~ 
+  //~ opentest();
+  //~ writetest();
+  //~ writetest1();
+  //~ createtest();
+//~ 
+  //~ openiputtest(); 
+  //~ exitiputtest();
+  //~ iputtest();
+//~ 
+  //~ mem();
+  //~ pipe1();
+  //~ preempt();
+  //~ exitwait();
+//~ 
+  //~ rmdot();
+  //~ fourteen();
+  //~ bigfile();
+  //~ subdir();
+  //~ linktest();
+  //~ unlinkread();
+  //~ dirfile();
+  //~ iref();
+  //~ forktest();
   //bigdir(); // slow
 
   uio();
 
   exectest();
-*/
   exit();
 }
