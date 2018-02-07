@@ -1,22 +1,12 @@
 Claire DeMars
 Advanced OS
-Project 1
-Due 1/30/2018
+Project 2
+Due 2/13/2018
 
 Changes Made:
-	procinfo.h: defined a struct to store proc info
-	proc.c: implementation, based on procdump
-	sysproc.c: "sys_" version, calling argptr
-	syscall.c syscall.h: regular syscall setup
-	testgetprocsinfo.c: test code
+	
 
-Overhead:
-	The new syscall, getprocsinfo, does not increase memory/space overhead
-	significantly, because it uses a data structure that
-	already existed (ptable), allocates a limited amount of memory
-	(an array of 64 new structs) using existing methods (argptr() calls).
-	and uses the same setup strategies as the previously existing system
-	calls. 
+
 	
 	
 	

@@ -11,13 +11,15 @@ void getprocsinfotest(){
 	
 	// originally
 	int proc_count = getprocsinfo(procs);
+	getprocsinfo(procs);
+
 	if(proc_count != 3){ printf(stdout, "TEST FAILED: not 3 processes "); exit(); }
 	int i;
 	printf(stdout, "\nbefore fork\n");
 	for (i=0; i<proc_count; i++){
 		printf(stdout, "pid: %d, name: %s\n", procs[i].pid, procs[i].name);
 	}
-	
+
 	// after a fork
 	int new_proc_pid = fork();
 	if(new_proc_pid < 0){
@@ -43,10 +45,16 @@ void getprocsinfotest(){
 	}
 }
 
+
+void call_user_version_test(){
+	call_user_version();
+}
+
 int
 main(int argc, char *argv[])
 {
   printf(1, "usertests starting\n");
   getprocsinfotest();
+  //~ call_user_version_test();
   exit();
 }

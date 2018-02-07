@@ -534,6 +534,10 @@ procdump(void)
   }
 }
 
+void test(void){
+	cprintf("test called");
+}
+
 int 
 getprocsinfo(struct procinfo* info){
 	// assumes info is already allocated with 64 slots
@@ -563,4 +567,8 @@ getprocsinfo(struct procinfo* info){
 		// to verify that  it fails (since the usertests are not run in priviledged mode, they can't get to that memory)
 		//~ info = (struct procinfo*) malloc(count* sizeof(struct procinfo) ); 
 	return count;
+}
+
+void call_kernal_version(void){
+	cprintf("call_kernal_version was called\n");
 }

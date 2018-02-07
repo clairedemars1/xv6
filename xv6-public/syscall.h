@@ -21,3 +21,4 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 #define SYS_getprocsinfo 22 //
+#define SYS_call_user_version 23 //

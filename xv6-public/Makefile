@@ -173,6 +173,7 @@ UPROGS=\
 	_stressfs\
 	_usertests\
 	_testgetprocsinfo\
+	_test\
 	_wc\
 	_zombie\
 
@@ -216,7 +217,7 @@ endif
 QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA)
 
 qemu: fs.img xv6.img
-	$(QEMU) -nographic -serial mon:stdio $(QEMUOPTS)
+	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
 qemu-memfs: xv6memfs.img
 	$(QEMU) -drive file=xv6memfs.img,index=0,media=disk,format=raw -smp $(CPUS) -m 256
@@ -243,7 +244,7 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 
 EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
-	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c testgetprocsinfo.c wc.c zombie.c\
+	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c testgetprocsinfo.c test.c wc.c zombie.c\
 	printf.c umalloc.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\

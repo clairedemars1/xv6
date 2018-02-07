@@ -91,10 +91,19 @@ sys_uptime(void)
   return xticks;
 }
 
+
 int sys_getprocsinfo(void){
+
 	char* info;
 	if ( argptr(0, &info, sizeof(struct procinfo) * NPROC) < 0 ){
 		return -1;
 	}
+	cprintf("info is %d\n", info);
 	return getprocsinfo( (struct procinfo*) info);
+	return 1;
+}
+
+void sys_call_kernal_version(void){
+	
+	call_kernal_version();
 }
