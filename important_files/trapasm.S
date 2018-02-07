@@ -1,1 +1,0 @@
-/home/cmdemar/Desktop/xv6-public/trapasm.S
