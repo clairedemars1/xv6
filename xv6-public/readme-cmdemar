@@ -1,0 +1,34 @@
+Claire DeMars
+Advanced OS
+Project 2
+Due 2/13/2018
+
+Changes Made:
+
+
+Plan of attack:
+
+null ptr exceptions
+1. move code from page 0 to page 1, and check usertests still work
+	- userinit in proc.c (I changed a 0 address)
+	- Makefile: I changed 3 0s
+	- initcode.S: I changed a number in exec
+	- exec.c: I looked at exec function, which allocates the pages, but doesn't seem to hardcode any addresses (but couldn't find where readi was defined, or allocuvm)
+2. find code that generates an error for somethign similar to dereferencing null ptr 
+	- exec.c exec function, goto bad )
+3. find who handles the dereferencing of memory pointers
+	- walkpgdir() seems to be the function in charge of finding which page to go to, so it could check if the value it gets is 0, and throw the exception if nec
+4. make #3 generate an error 
+
+shared memory
+1. 
+
+
+
+Files considered
+- setupkvm in test.c (probably not relevant)
+
+	
+	
+	
+

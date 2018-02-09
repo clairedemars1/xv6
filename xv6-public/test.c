@@ -5,8 +5,7 @@ int stdout = 1;
 
 void testmemproj2(){
 	char* ptr = 0;
-	char val = *ptr;
-	//~ printf(stdout, "val at ptr: %d\n", *ptr);
+	printf(stdout, "val at ptr: %d\n", *ptr);
 }
 
 
