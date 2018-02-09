@@ -21,6 +21,7 @@ exec(char *path, char **argv)
 
   begin_op();
 
+	cprintf("exec called on this path: %s\n", path); //
   if((ip = namei(path)) == 0){
     end_op();
     cprintf("exec: fail\n");
@@ -41,7 +42,8 @@ exec(char *path, char **argv)
   // Load program into memory.
   sz = 0;
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
-    if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
+	  // where does it get the ph.vaddr from? cuz we don't want that to be NULL/0 
+    if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph)) 
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
       continue;
