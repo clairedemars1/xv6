@@ -138,8 +138,8 @@ userinit(void)
   p->tf->ss = p->tf->ds;
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
-  //~ p->tf->eip = 0;  // beginning of initcode.S
-  p->tf->eip = 0x1000;  // beginning of initcode.S
+  p->tf->eip = 0;  // beginning of initcode.S
+  //~ p->tf->eip = 0x1000;  // i wanted to change
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");

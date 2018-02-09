@@ -110,8 +110,8 @@ entryother: entryother.S
 initcode: initcode.S
 	$(CC) $(CFLAGS) -nostdinc -I. -c initcode.S
 	# proj2? 
-	#$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o initcode.out initcode.o
-	$(LD) $(LDFLAGS) -N -e start -Ttext 4096 -o initcode.out initcode.o # start it on page 1, not 0
+	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o initcode.out initcode.o
+	#$(LD) $(LDFLAGS) -N -e start -Ttext 4096 -o initcode.out initcode.o # start it on page 1, not 0
 	$(OBJCOPY) -S -O binary initcode.out initcode
 	$(OBJDUMP) -S initcode.o > initcode.asm
 
