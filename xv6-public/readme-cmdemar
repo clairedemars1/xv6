@@ -4,6 +4,26 @@ Project 2
 Due 2/13/2018
 
 Changes Made:
+
+
+Plan of attack:
+
+null ptr exceptions
+1. move code from page 0 to page 1, and check usertests still work
+2. find code that generates an error for somethign similar to dereferencing null ptr ( exec function )
+3. find who handles the dereferencing of memory pointers
+4. make #3 generate an error 
+
+shared memory
+
+
+
+Files considered
+- userinit in proc.c (haha: 0 address)
+- 3 0s in Makefile
+- setupkvm in test.c (probably not relevant)
+- exec function 
+- initcode.S changed a number in exec
 	
 
 

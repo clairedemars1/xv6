@@ -123,7 +123,7 @@ setupkvm(void)
 
   if((pgdir = (pde_t*)kalloc()) == 0)
     return 0;
-  memset(pgdir, 0, PGSIZE);
+  memset(pgdir, 0, PGSIZE); // proj2?
   if (P2V(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
