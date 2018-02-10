@@ -4,8 +4,31 @@
 int stdout = 1;
 
 void deref_null(){
+	
 	char* ptr = 0;
-	printf(stdout, "val at ptr: %d\n", *ptr);
+	
+	//*ptr = 'a'; // both trap
+	
+	char t = *ptr; // linux trap, no trap in my code
+	t++;
+	
+	
+	//~ *ptr = 'a'; // throws trap
+	
+	
+	//~ printf(stdout, ptr); // trap
+	/*
+	int pid = fork();
+	if (pid < 0){
+		printf(stdout, "fork and test failed");
+	} else if (pid == 0){ // child
+		printf(stdout, "Fork memory copying worked.\n");
+		printf(stdout, "Trying to derefence null ptr (should get trap 14 and kill process)\n");
+		char test = *ptr;
+		test++; // allow compile
+	} else {
+		wait();
+	}*/
 }
 
 void share_memory_basic(){
@@ -50,7 +73,7 @@ int
 main(int argc, char *argv[])
 {
   printf(stdout, "Starting proj 2 tests\n");
-  //~ deref_null();
-  share_memory_basic();
+  deref_null();
+  //~ share_memory_basic();
   exit();
 }
