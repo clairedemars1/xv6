@@ -25,7 +25,9 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int getprocsinfo(struct procinfo*);
-void call_user_version(void);
+void* shmem_access(int page_number);
+int shmem_count(int page_number);
+void call_user_version(void); // experiment
 
 // ulib.c
 int stat(char*, struct stat*);

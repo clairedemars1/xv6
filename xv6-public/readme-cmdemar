@@ -4,6 +4,14 @@ Project 2
 Due 2/13/2018
 
 Changes Made:
+	Nullptr Exceptions
+	- Makefile: changed entry point for all user executables (-Ttext flag argument)
+	- exec.c (exec function) : added guard page at bottom of user memory
+	Shared Pages
+	- syscall setup: syscall.h, syscall.c usys.S, user.h
+	- 
+
+
 
 
 Plan of attack:
@@ -23,12 +31,20 @@ null ptr exceptions
 shared memory
 1. 
 
+hint
+tell other guy to sleep, write, other guy wakes and reads
 
 
-Files considered
-- setupkvm in test.c (probably not relevant)
 
 	
+Questions
+- exec.c
+a. what is ph.vaddr vs ph.memsize, are they redundant?
+b. exec checks if the binary requests an amount of memory (ph.vaddr)
+that is a multiple of the page size, and if not, it exits, but how would the binary know what page size you use?
+ I guess the compiler asks the OS when it makes the binary?
+
+
 	
 	
 

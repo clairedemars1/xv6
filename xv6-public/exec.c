@@ -38,13 +38,13 @@ exec(char *path, char **argv)
   if((pgdir = setupkvm()) == 0)
     goto bad;
 
-  // Load program into memory.
+  // Put in guard page to prevent nullptr dereferences
   sz = 0;
-  // guard page
   if((sz = allocuvm(pgdir, sz, sz + PGSIZE)) == 0)
     goto bad;
   clearpteu(pgdir, (char*)(sz - PGSIZE));
   
+  // Load program into memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
       goto bad;

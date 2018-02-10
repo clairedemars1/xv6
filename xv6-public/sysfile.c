@@ -444,3 +444,15 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+void* sys_shmem_access(void){
+	int page_number;
+	if ( argint(0, &page_number) < 0) return 0;
+	
+	return 0; // change
+}
+int sys_shmem_count(void){
+	int page_number;
+	if (argint(0, &page_number) < 0) return -1;
+	return 42;
+} 
