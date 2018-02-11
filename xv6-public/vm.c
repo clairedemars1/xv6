@@ -399,3 +399,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+void* shmem_access(int pg_num){
+	return 0;
+}

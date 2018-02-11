@@ -448,8 +448,7 @@ sys_pipe(void)
 void* sys_shmem_access(void){
 	int page_number;
 	if ( argint(0, &page_number) < 0) return 0;
-	
-	return 0; // change
+	return shmem_access(page_number);
 }
 int sys_shmem_count(void){
 	int page_number;

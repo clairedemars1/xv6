@@ -15,16 +15,15 @@ void deref_null(){
 	//~ t++;
 }
 
-void share_memory_basic(){
-	char* test_str = "I am Bob.\n";
+
+void share_memory_basic(){ // fork before get page access
+	char* test_str = "Ann\n";
 	int pid = fork();
 	if(pid < 0){
 		printf(stdout, "Fork failed\n");
 		exit();
 	}
-	else if (pid == 0){ // child
-		// runs before parent, b/c parent is waiting (or does parent need to tell child to sleep?)
-			// does it matter that what the child does is an io action? Can that action last after the child is dead?
+	else if (pid == 0){ // child goes first: writes
 		char* shared_page = (char*) shmem_access(2);
 		// //~ shared_page = "i ii iiiii"; // todo
 		
@@ -33,8 +32,8 @@ void share_memory_basic(){
 		
 		printf(stdout, "child finished\n");
 		exit();
-	} else { // parent
-		wait(); // until child has written 
+	} else { // parent goes second: reads
+		wait();
 		
 		char *shared_page = (char *) shmem_access(2);
 		// //~ shared_page = test_str;
@@ -44,9 +43,10 @@ void share_memory_basic(){
 		} else {
 			printf(stdout, "\tFAILED share memory basic test\n");
 		}
-		printf(stdout, "parent finished\n");
 	}
 }
+
+
 
 void share_memory_fork_after_get_page_access(){
 	

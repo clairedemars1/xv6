@@ -170,6 +170,7 @@ crt	console.c	129
 data	ioapic.c	31
 data	pipe.c	15
 deallocuvm	vm.c	/^deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)$/
+deref_null	test.c	/^void deref_null(){$/
 dev	log.c	45
 devsw	file.c	13
 dirfile	usertests.c	/^dirfile(void)$/
@@ -435,6 +436,8 @@ sched	proc.c	/^sched(void)$/
 scheduler	proc.c	/^scheduler(void)$/
 seginit	vm.c	/^seginit(void)$/
 setupkvm	vm.c	/^setupkvm(void)$/
+share_memory_basic	test.c	/^void share_memory_basic(){$/
+share_memory_fork_after_get_page_access	test.c	/^void share_memory_fork_after_get_page_access(){$/
 sharedfd	usertests.c	/^sharedfd(void)$/
 size	log.c	42
 size	umalloc.c	14
@@ -479,6 +482,8 @@ sys_open	sysfile.c	/^sys_open(void)$/
 sys_pipe	sysfile.c	/^sys_pipe(void)$/
 sys_read	sysfile.c	/^sys_read(void)$/
 sys_sbrk	sysproc.c	/^sys_sbrk(void)$/
+sys_shmem_access	sysfile.c	/^void* sys_shmem_access(void){$/
+sys_shmem_count	sysfile.c	/^int sys_shmem_count(void){$/
 sys_sleep	sysproc.c	/^sys_sleep(void)$/
 sys_unlink	sysfile.c	/^sys_unlink(void)$/
 sys_uptime	sysproc.c	/^sys_uptime(void)$/
@@ -486,7 +491,6 @@ sys_wait	sysproc.c	/^sys_wait(void)$/
 sys_write	sysfile.c	/^sys_write(void)$/
 syscall	syscall.c	/^syscall(void)$/
 test	proc.c	/^void test(void){$/
-testmemproj2	test.c	/^void testmemproj2(){$/
 ticks	trap.c	15
 tickslock	trap.c	14
 trap	trap.c	/^trap(struct trapframe *tf)$/
