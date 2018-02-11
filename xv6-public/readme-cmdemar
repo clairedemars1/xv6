@@ -34,15 +34,22 @@ shared memory
 hint
 tell other guy to sleep, write, other guy wakes and reads
 
-
+Notes:
+how does paging do protection? what replaces base and bound? Answer: if the first part of the address doesn't match an entry
+in the page table (see walkpgdir)
 
 	
 Questions
+Q1
 - exec.c
 a. what is ph.vaddr vs ph.memsize, are they redundant?
 b. exec checks if the binary requests an amount of memory (ph.vaddr)
 that is a multiple of the page size, and if not, it exits, but how would the binary know what page size you use?
  I guess the compiler asks the OS when it makes the binary?
+ Q2
+ - base and bounds are checked by hardware (at least for user code), so why does the argptr function
+ check them? the argptr function is kernal, but why wouldn't the kernal just use the existing machinery, and load it's own bounds limit
+ into tohe bounds register? well, for one, b/c their is no base and bounds, it's become the page table now (which only the kernal can edit)
 
 
 	

@@ -42,7 +42,16 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
   if(*pde & PTE_P){
     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
   } else {
-    if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
+	  
+    //~ if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
+    pgtab = (pte_t*)kalloc();
+    
+    // this is, alas, not what catches the page fault
+    //~ if (pgtab == 0){
+		//~ cprintf("aha\n");
+	//~ } 
+	
+    if(!alloc || pgtab == 0)
       return 0;
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);

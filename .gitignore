@@ -11,3 +11,4 @@ bootblock
 entryother
 initcode
 kernel
+tags
