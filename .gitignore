@@ -11,4 +11,5 @@ bootblock
 entryother
 initcode
 kernel
-tags
+//./tags
+//tags // why did these not work?
