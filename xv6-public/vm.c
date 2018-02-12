@@ -35,12 +35,17 @@ seginit(void)
 static pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
-  pde_t *pde;
-  pte_t *pgtab;
+  pde_t *pde; // pointer to page directory entry (*not* to page table entry)
+				// note: it's sorta a double pointer, since the entry itself is a pointer with some extra status bits
+  pte_t *pgtab; // pointer to page table entry (entry not whole table: so could be called pte)
 
-  pde = &pgdir[PDX(va)];
-  if(*pde & PTE_P){
-    pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
+  pde = &pgdir[PDX(va)]; // get pde: get the page dir index for that virtual address, look there in the page dir
+  // this is a pointer to the right place in the page directory
+  // i think the order is &( pgdir[PDX(va)] )
+  if(*pde & PTE_P){ // go to the right place in the page directory, if any pages are allocated in it
+    pgtab = (pte_t*)P2V(PTE_ADDR(*pde)); 
+    // get the (physical) address of the beginning of the page of pg *table* entries
+    //  convert it to virtual address
   } else {
 	  
     //~ if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
@@ -60,7 +65,8 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
     // entries, if necessary.
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
   }
-  return &pgtab[PTX(va)];
+  return &pgtab[PTX(va)]; // pgtab is a pointer to a page-worth of pte,
+  // so get the page part of the virtual address, and return a pointer to that entry (without checking it's presense bits or anything)
 }
 
 // Create PTEs for virtual addresses starting at va that refer to
