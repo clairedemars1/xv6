@@ -66,3 +66,4 @@ vm.c
 why make a pointer here? 
 what you really need to do is take off the extra bits from the pointer part of it, which requires calling some function like PDX
 
+
