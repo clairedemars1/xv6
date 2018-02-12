@@ -56,6 +56,10 @@ Q4
 the anding, 
 eg #define PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF) in mmu.h
 eg page directory index PDX in mmu.h
-	
+Q5
+vm.c
+  pde = &pgdir[PDX(va)];
+why make a pointer here? 
+what you really need to do is take off the extra bits from the pointer part of it, which requires calling some function like PDX
 	
 
