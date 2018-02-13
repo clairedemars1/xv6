@@ -116,6 +116,32 @@ void two_processes_simultaneously_fork_irrelevant(){
 	}
 }
 
+void process_gets_access_then_forks(){
+	char* name = "process_gets_access_then_forks";
+	char* test_str = "Bob\n";
+	int pg_num = 1;
+	
+	char* shared_page = shmem_access(pg_num);
+	
+	int pid = fork();
+	if (pid == 0){ // child
+		sleep(200); // let parent go first
+		if( shmem_count(pg_num) != 2){
+			print_test_result(0, name);
+			return; 
+		}
+		if (strcmp(shared_page, test_str) != 0){ 
+			print_test_result(0, name);
+			return; 
+		}
+		print_test_result(1, name); 
+		exit();
+	} else { // parent
+		strcpy(shared_page, test_str);
+		wait();
+	}
+}
+
 void use_memory_not_in_page_table(){
 	int* ptr = UINTPTR_MAX;
 	(*ptr)++; // throws trap 14 :)
@@ -140,6 +166,7 @@ main(int argc, char *argv[])
   basic_ref_counts();
   ref_counts_after_process_exits();
   two_processes_simultaneously_fork_irrelevant();
+  process_gets_access_then_forks();
   //~ use_memory_not_in_page_table(); // for understanding
   exit();
 }
