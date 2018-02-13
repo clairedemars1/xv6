@@ -13,33 +13,18 @@ Changes Made:
 	address was not in the nullptr guard page
 	
 	Shared Pages
-	- syscall setup: syscall.h, syscall.c usys.S, user.h
+	- syscall setup - syscall.h, syscall.c usys.S, user.h
 	- params.h defined number of shared pages allowed (NSH)
-	- vm.c: made global_shared_pages[NSH]. Made process specific shared_pages[NSH] in proc struct
-	- proc.c (allocproc function) initialized process's shared_pages
+	- proc.h: made global_shared_pages[NSH]. 
+	- vm.c: Made process-specific shared_pages[NSH] in proc struct
+	- proc.c:  (allocproc function) initialized process's shared_pages
+			(exit function) decrement reference count when a process exits
+			
 
-I'm confused by how there are two kinds of virtual addresses (or something). 
+I'm confused by how there seem to be two kinds of virtual addresses.
 Like kalloc returns a physical address, but then allocuvm calls V2P on it, implying that it was virtual
 Some functions, like memset, need the virtual version of the physical address (as seen in allocuvm)
 but others, like mappages, need the physical version of the physical address (again, in allocuvm)
-
-
-Plan of attack:
-
-null ptr exceptions
-1. move code from page 0 to page 1, and check usertests still work
-	- userinit in proc.c (I changed a 0 address)
-	- Makefile: I changed 3 0s
-	- initcode.S: I changed a number in exec
-	- exec.c: I looked at exec function, which allocates the pages, but doesn't seem to hardcode any addresses (but couldn't find where readi was defined, or allocuvm)
-2. find code that generates an error for somethign similar to dereferencing null ptr 
-	- exec.c exec function, goto bad )
-3. find who handles the dereferencing of memory pointers
-	- walkpgdir() seems to be the function in charge of finding which page to go to, so it could check if the value it gets is 0, and throw the exception if nec
-4. make #3 generate an error 
-
-shared memory
-1. 
 
 hint
 tell other guy to sleep, write, other guy wakes and reads

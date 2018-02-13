@@ -250,7 +250,6 @@ exit(void)
 	  if (shared_pages[i].virtual_addr){
 		  global_shared_pages[i].reference_count--;
 	  }
-	  
   }
 
   // Close all open files.

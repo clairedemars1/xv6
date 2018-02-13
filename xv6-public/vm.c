@@ -344,6 +344,8 @@ copyuvm(pde_t *pgdir, uint sz)
 
   if((d = setupkvm()) == 0)
     return 0;
+    
+  // copy regular stuff
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
@@ -357,6 +359,27 @@ copyuvm(pde_t *pgdir, uint sz)
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
   }
+  // copy shared pages
+  /*
+  struct sh_pg* shared_pages = myproc()->shared_pages; // old process's shared pages
+  int j;
+  
+  
+  for (j = 0; j < NSH; j++){
+	  void* va;
+	  if( (va = shared_pages[j].virtual_addr) != 0){ // found a shared page
+		  // copy over to new process's pgdir
+		  pte_t* pte = ; // do allocate 
+		  if ( walkpgdir(pgdir, va, 1) == 0 ){
+			  cprint("bad - to claire\n");
+			  goto bad;
+		  } else {
+			global_shared_pages[j].reference_count++;
+		  }
+	  }
+  }
+  
+  */
   return d;
 
 bad:
@@ -414,8 +437,6 @@ void* va_of_shared_page_for_cur_process(int pg_num){
 	return shared_pages[pg_num].virtual_addr;
 }
 
-
-
 void* next_available_shared_memory_va_of_cur_process(){
 	void* next_avail = 0;
 	struct sh_pg* shared_pages = myproc()->shared_pages;
@@ -436,7 +457,6 @@ void* next_available_shared_memory_va_of_cur_process(){
 		if (!is_being_used){
 			next_avail = page_ptr; 
 		}
-		
 	} // end for
 	return next_avail;
 }
@@ -489,7 +509,8 @@ void* shmem_access(int pg_num){
 		  kfree(P2V(shared_pg_pa)); // change it back for kfree
 		  return 0;
 		}
-		// only update reference count if this process didn't have access before
+		// update reference count if and only if this process didn't have access before
+		cprintf("incrementing ref count \n");
 		global_shared_pages[pg_num].reference_count++;
 	} // end if
 	

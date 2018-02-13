@@ -91,6 +91,31 @@ void share_memory_fork_after_get_page_access(){
 	
 }
 
+void two_processes_simultaneously_fork_irrelevant(){
+	char* name = "two_processes_simultaneously_fork_irrelevant";
+	char* test_str = "Ann\n";
+	int pg_num = 3;
+	int pid = fork();
+	if (pid == 0){ // child
+		sleep(200); // let parent go first
+		char* childs_shared_page = shmem_access(pg_num);
+		if( shmem_count(pg_num) != 2){
+			print_test_result(0, name);
+			return; 
+		}
+		if (strcmp(childs_shared_page, test_str) != 0){ 
+			print_test_result(0, name);
+			return; 
+		}
+		print_test_result(1, name); 
+		exit();
+	} else { // parent
+		char* parents_shared_page = shmem_access(pg_num);
+		strcpy(parents_shared_page, test_str);
+		wait();
+	}
+}
+
 void use_memory_not_in_page_table(){
 	int* ptr = UINTPTR_MAX;
 	(*ptr)++; // throws trap 14 :)
@@ -114,7 +139,7 @@ main(int argc, char *argv[])
   //~ share_memory_basic();
   basic_ref_counts();
   ref_counts_after_process_exits();
-  
+  two_processes_simultaneously_fork_irrelevant();
   //~ use_memory_not_in_page_table(); // for understanding
   exit();
 }
