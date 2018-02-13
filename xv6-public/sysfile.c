@@ -453,6 +453,5 @@ void* sys_shmem_access(void){
 int sys_shmem_count(void){
 	int page_number;
 	if (argint(0, &page_number) < 0) return -1;
-	return 42;
-	//todo
+	return shmem_count(page_number);
 } 

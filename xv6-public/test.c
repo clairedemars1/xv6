@@ -4,6 +4,14 @@
 
 int stdout = 1;
 
+void print_test_result(int passed, char* name){
+	if (passed){
+		printf(stdout, "Passed %s\n", name);
+	} else {
+		printf(stdout, "\tFAILED %s\n", name);
+	}
+}
+
 void deref_null(){
 	
 	char* ptr = 0;
@@ -46,14 +54,21 @@ void share_memory_basic(){ // fork before get page access
 	}
 }
 
-void share_memory_test1_write_and_read_from_same_process(){
-	char* test_str = "Ann\n";
-	char* shared_page = (char*) shmem_access(0);
-	if( !shared_page ){ 
+void basic_ref_counts(){
+	char* name_of_test = "basic_ref_counts";
+	char* shared_page_2 = (char*) shmem_access(2);
+	shared_page_2 = (char*) shmem_access(2);
+	if( !shared_page_2 ){ 
 		printf(stdout, "FAILED b/c allocation failed\n");
 		return;
 	}
-	strcpy(shared_page, test_str);
+	
+	if( shmem_count(2) != 1){ 
+		print_test_result(0, name_of_test); 
+		return;
+	}
+	
+	print_test_result(1, name_of_test);
 }
 
 void share_memory_fork_after_get_page_access(){
@@ -80,8 +95,8 @@ main(int argc, char *argv[])
 {
   //~ printf(stdout, "Starting proj 2 tests\n");
   //~ deref_null();
-  //~ share_memory_test1_write_and_read_from_same_process();
-  share_memory_basic();
+  //~ share_memory_basic();
+  basic_ref_counts();
   
   //~ use_memory_not_in_page_table(); // for understanding
   exit();

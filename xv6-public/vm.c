@@ -432,12 +432,19 @@ void* next_available_shared_memory_va_of_cur_process(){
 	for(i=0; i<NSH && !next_avail; i++){ 
 		// while have not found next_avail, look for it in the top 4 pages
 		page_ptr-= PGSIZE; // potential virtual address of the page
-		for (j=0; j<NSH && !next_avail; j++){ 
-			// check if page_ptr it's actually being used as a shared page 
+		
+		// check if page_ptr it's actually being used as a shared page 
+		int is_being_used = 0;
+		for (j=0; j<NSH; j++){ 
 			if (page_ptr == shared_pages[j].virtual_addr){
-				next_avail = page_ptr; 
+				is_being_used = 1;
 			}
 		}
+		// we didn't find it being used, so it's free
+		if (!is_being_used){
+			next_avail = page_ptr; 
+		}
+		
 	} // end for
 	return next_avail;
 }
@@ -464,12 +471,11 @@ void* shmem_access(int pg_num){
 	// update the global info 
 	
 	if ( (shared_pg_va = va_of_shared_page_for_cur_process(pg_num) ) == 0 ) {
-		
 		// find out what va we need
 		shared_pg_va = next_available_shared_memory_va_of_cur_process(); 
 		
 		// get or set page's pa
-		if ( ( shared_pg_pa = pa_of_shared_page_for_any_process) == 0 ){
+		if ( ( shared_pg_pa = pa_of_shared_page_for_any_process(pg_num)) == 0 ){
 			// pa dne (ie page is not allocated for *any* process) so set it
 			// allocate a new page 
 			shared_pg_pa = kalloc(); // is this physical??
@@ -483,19 +489,26 @@ void* shmem_access(int pg_num){
 			shared_pg_pa = (void*) V2P(shared_pg_pa); 
 		} // end nested if
 		
-		// map the va to the pa: make it a real va: map it in so the page table knows that va has a physical space assigned to it
+		// map the va to the pa: making it a real va 
+		// 		(in that the page table knows that va has a physical space assigned to it
+		//~ cprintf("trying to give it this va %p %p \n", shared_pg_va, (char*) shared_pg_va );
 		if(mappages(pgdir, (char*)shared_pg_va, PGSIZE, (uint) shared_pg_pa, PTE_W|PTE_U) < 0){ 
 		  cprintf("shmem access out of memory (2)\n");
-		  kfree(P2V(shared_pg_pa)); // gotta change it back for kfree
+		  kfree(P2V(shared_pg_pa)); // change it back for kfree
 		  return 0;
 		}
+		// only update reference count if this process didn't have access before
+		global_shared_pages[pg_num].reference_count++;
 	} // end if
 	
-	// update the global info
 	global_shared_pages[pg_num].phys_addr = shared_pg_pa; 
-	global_shared_pages[pg_num].reference_count++;
+	myproc()->shared_pages[pg_num].virtual_addr = shared_pg_va; 
 	
 	return shared_pg_va;
+}
+
+int shmem_count(int pg_num){
+	return global_shared_pages[pg_num].reference_count;
 }
 
 //PAGEBREAK!
