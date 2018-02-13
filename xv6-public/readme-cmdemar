@@ -37,6 +37,5 @@ Changes Made:
 	- defs.h and proc.c added a param to copyuvm so it took a pointer to the new proc, 
 	so could let the new proc know it had shared pages, if applicable
 	- vm.c (deallocuvm function) don't let it double free shared memory
-			
 
 

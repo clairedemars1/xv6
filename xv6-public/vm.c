@@ -440,8 +440,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   return 0;
 }
 
-//~ typedef enum { do_not_alloc, do_alloc } alloc;
-
 void* va_of_shared_page_for_cur_process(int pg_num){
 	// return 0 if shared page is absent
 	
@@ -477,6 +475,7 @@ void* next_available_shared_memory_va_of_cur_process(){
 void* pa_of_shared_page_for_any_process(int pg_num){
 	return global_shared_pages[pg_num].phys_addr;
 }
+
 
 void* shmem_access(int pg_num){
 	
