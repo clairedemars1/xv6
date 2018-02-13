@@ -9,11 +9,13 @@ Testing code:
 		test_null_deref
 		test for the shared pages
 		
-	before I changed copyuvm, all test cases except the last worked
-		changing copyuvm caused kfree errors, but I couldn't isolate them 
-		(tried: wrapping every possible kfree in print statements; using 
-		dbg mode, but couldn't get it to start) 
-
+	tests don't all work: 
+		before I changed copyuvm, all test cases except the last worked
+		I think copyuvm caused the kfree errors present now,
+		so probably I'm copying the memory wrong when forking and causing a double free
+		but I couldn't isolate the error source
+		(tried: wrapping each possible kfree in print statements; using 
+		dbg mode- but couldn't get it to work) 
 
 
 Changes Made:

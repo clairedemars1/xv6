@@ -293,6 +293,11 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       if(pa == 0)
         panic("kfree");
       char *v = P2V(pa);
+      
+      // if page is shared page with reference count > 0, don't free it
+      // regardless, decrement the reference count
+      
+      
       kfree(v);
       *pte = 0;
     }

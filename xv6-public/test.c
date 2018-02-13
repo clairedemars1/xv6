@@ -160,9 +160,9 @@ main(int argc, char *argv[])
   //~ deref_null();
   
   // Note: these each pass independently, but not together (kfree errors, probably something wrong with copying)
-  //~ basic_ref_counts(); 
-  ref_counts_after_process_exits();
-  two_processes_simultaneously_fork_irrelevant();
+    ref_counts_after_process_exits();
+	basic_ref_counts(); 
+  //~ two_processes_simultaneously_fork_irrelevant();
   //~ process_gets_access_then_forks();
   
   exit();
