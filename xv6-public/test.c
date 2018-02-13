@@ -46,11 +46,27 @@ void share_memory_basic(){ // fork before get page access
 		char *shared_page = (char *) shmem_access(2);
 		// //~ shared_page = test_str;
 		//~ printf(stdout, "%s", shared_page);
-		if (strcmp(shared_page, test_str) == 0){ 
+		if (strcmp(shared_page, test_str) != 0){ 
 			printf(stdout, "PASSED share memory basic test\n");
 		} else {
 			printf(stdout, "\tFAILED share memory basic test\n");
 		}
+	}
+}
+
+void ref_counts_after_process_exits(){
+	char* name = "ref_counts_after_process_exits";
+	int pid = fork();
+	if (pid == 0){ // child
+		shmem_access(1);
+		exit();
+	} else {
+		wait();
+		if( shmem_count(1) != 0){
+			print_test_result(0, name);
+			return; 
+		}
+		print_test_result(1, name); 
 	}
 }
 
@@ -63,7 +79,7 @@ void basic_ref_counts(){
 		return;
 	}
 	
-	if( shmem_count(2) != 1){ 
+	if( shmem_count(2) != 1 || shmem_count(0) != 0){ 
 		print_test_result(0, name_of_test); 
 		return;
 	}
@@ -97,6 +113,7 @@ main(int argc, char *argv[])
   //~ deref_null();
   //~ share_memory_basic();
   basic_ref_counts();
+  ref_counts_after_process_exits();
   
   //~ use_memory_not_in_page_table(); // for understanding
   exit();
