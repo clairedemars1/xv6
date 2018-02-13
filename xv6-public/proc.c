@@ -74,6 +74,7 @@ myproc(void) {
 static struct proc*
 allocproc(void)
 {
+	// It checked it's called for each proc, even forked ones
   struct proc *p;
   char *sp;
 
@@ -89,6 +90,12 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  
+  // initialize process's record of shared_pages
+	int i;
+	for(i=0; i<NSH; i++){
+		p-> shared_pages-> virtual_addr = 0;
+	}
 
   release(&ptable.lock);
 

@@ -405,58 +405,102 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   return 0;
 }
 
-//PAGEBREAK!
-// Blank page.
-//PAGEBREAK!
-// Blank page.
-//PAGEBREAK!
-// Blank page.
 
-#define NSH 4 // number of shared pages allowed
-typedef struct sh_pg { // shared page
+
+typedef struct global_sh_pg { // global shared page
 	int reference_count;
-	void* phy_addr; 
-} sh_pg;
-sh_pg shared_pages[NSH];
+	void* phys_addr;  // actually physical (not kernal version of physical)
+} global_sh_pg;
+global_sh_pg global_shared_pages[NSH];
 
-typedef enum { do_not_alloc, do_alloc } alloc;
+//~ typedef enum { do_not_alloc, do_alloc } alloc;
 
-void* address_of_shared_page_with_number(int pg_num){
-	// 0 if absent
-	// check the ptes for the top 4 page-sized pieces of user memory
-	void* pg_addr = 0; // 0 until found
+void* va_of_shared_page_for_cur_process(int pg_num){
+	// return 0 if shared page is absent
 	
-	pde_t* pgdir = myproc()->pgdir;
-	int i;
-	void* page_ptr = (void*) KERNBASE;
-	pte_t* pte_ptr; 
-	
-	for(i=0; i<NSH && !pg_addr; i++){
-		page_ptr-= PGSIZE;
-		if ( (pte_ptr = walkpgdir(pgdir, page_ptr, do_not_alloc) ) != 0 ){ 
-			// there is a chance the page is allocated (b/c the pgdir entry for that batch of pages is valid/present)
-			if ( (*pte_ptr) & PTE_P){ // the page is allocated
-				pg_addr = (void*) PTE_ADDR(*pte_ptr);
+	struct sh_pg* shared_pages = myproc()->shared_pages;
+	return shared_pages[pg_num].virtual_addr;
+}
+
+
+
+void* next_available_shared_memory_va_of_cur_process(){
+	void* next_avail = 0;
+	struct sh_pg* shared_pages = myproc()->shared_pages;
+	char* page_ptr = (char*) KERNBASE; 
+	int i, j;
+	for(i=0; i<NSH && !next_avail; i++){ 
+		// while have not found next_avail, look for it in the top 4 pages
+		page_ptr-= PGSIZE; // potential virtual address of the page
+		for (j=0; j<NSH && !next_avail; j++){ 
+			// check if page_ptr it's actually being used as a shared page 
+			if (page_ptr == shared_pages[j].virtual_addr){
+				next_avail = page_ptr; 
 			}
 		}
 	} // end for
-	
-	return pg_addr; 
+	return next_avail;
+}
+
+
+void* pa_of_shared_page_for_any_process(int pg_num){
+	return global_shared_pages[pg_num].phys_addr;
 }
 
 void* shmem_access(int pg_num){
-	if (pg_num > NSH-1 || pg_num < 0 ){ return 0; } // out of range
-	// see if the process already has a reference to that number page
-	void* shared_page = address_of_shared_page_with_number(pg_num); // 0 if absent, address if present
-	if ( shared_page ) {
-		// if so, return it's virtual address, and increment it's reference count
-		shared_pages[pg_num].reference_count++;
-		return shared_page;
-	} else {
-	// if not, allocate a new page (kalloc), link it up to the page table (at the highest spot in user memory)
-	// and return it's address
-		
-	}
 	
-	return 0;
+	void* shared_pg_va = 0; // virtual
+	void* shared_pg_pa = 0; // physical (but "virtual" version of physical? ie one that this process can use?! oh my gosh)
+	pde_t* pgdir = myproc()->pgdir; 
+	
+	if (pg_num >= NSH || pg_num < 0 ){ return 0; } // bad request
+	
+	// if the process already has access to that shared page, get its va
+	// if not
+	// 		find out what va we need
+	//  	if any process has the shared page, get the page's pa
+	// 		if no process has the shared page, allocate a new physical page and get it's pa
+	// 		map the va to the pa
+	// update the global info 
+	
+	if ( (shared_pg_va = va_of_shared_page_for_cur_process(pg_num) ) == 0 ) {
+		
+		// find out what va we need
+		shared_pg_va = next_available_shared_memory_va_of_cur_process(); 
+		
+		// get or set page's pa
+		if ( ( shared_pg_pa = pa_of_shared_page_for_any_process) == 0 ){
+			// pa dne (ie page is not allocated for *any* process) so set it
+			// allocate a new page 
+			shared_pg_pa = kalloc(); // is this physical??
+			if (shared_pg_pa == 0 ){
+				cprintf("shmem_access out of physical memory\n");
+				return 0;
+			}
+			memset(shared_pg_pa, 0, PGSIZE); // initialize to zero
+			
+			// pa has to be actually physical to use in mappages and store in global info about shared pages
+			shared_pg_pa = (void*) V2P(shared_pg_pa); 
+		} // end nested if
+		
+		// map the va to the pa: make it a real va: map it in so the page table knows that va has a physical space assigned to it
+		if(mappages(pgdir, (char*)shared_pg_va, PGSIZE, (uint) shared_pg_pa, PTE_W|PTE_U) < 0){ 
+		  cprintf("shmem access out of memory (2)\n");
+		  kfree(P2V(shared_pg_pa)); // gotta change it back for kfree
+		  return 0;
+		}
+	} // end if
+	
+	// update the global info
+	global_shared_pages[pg_num].phys_addr = shared_pg_pa; 
+	global_shared_pages[pg_num].reference_count++;
+	
+	return shared_pg_va;
 }
+
+//PAGEBREAK!
+// Blank page.
+//PAGEBREAK!
+// Blank page.
+//PAGEBREAK!
+// Blank page.

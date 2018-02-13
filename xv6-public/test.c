@@ -65,14 +65,23 @@ void use_memory_not_in_page_table(){
 	(*ptr)++; // throws trap 14 :)
 }
 
+// Note: My code zeros-out a page once it's reference count is zero
+// for example, assuming no other processes,
+// if a program forks, then the child gets access then write and exits
+// and the parent waits until the child has exited then get access and read
+// then the parent should find nothing. Because when the child died, 
+// the shared page would have a reference count of zero 
+// (assuming no other processs are sharing it) and so it should be gotten rid of
+
+
 // make sure all children exit
 int
 main(int argc, char *argv[])
 {
   //~ printf(stdout, "Starting proj 2 tests\n");
   //~ deref_null();
-  share_memory_test1_write_and_read_from_same_process();
-  //~ share_memory_basic();
+  //~ share_memory_test1_write_and_read_from_same_process();
+  share_memory_basic();
   
   //~ use_memory_not_in_page_table(); // for understanding
   exit();

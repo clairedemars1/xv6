@@ -33,7 +33,9 @@ struct context {
 };
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
-
+struct sh_pg {
+	void* virtual_addr; // 0 if not allocated
+};
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
@@ -49,7 +51,10 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  struct sh_pg shared_pages[NSH]; // info on the shared pages the process has access to
+									// index indicates page number (0 to NSH-1)
 };
+
 
 // Process memory is laid out contiguously, low addresses first:
 //   text

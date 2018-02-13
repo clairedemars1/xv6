@@ -14,9 +14,14 @@ Changes Made:
 	
 	Shared Pages
 	- syscall setup: syscall.h, syscall.c usys.S, user.h
-	- 
+	- params.h defined number of shared pages allowed (NSH)
+	- vm.c: made global_shared_pages[NSH]. Made process specific shared_pages[NSH] in proc struct
+	- proc.c (allocproc function) initialized process's shared_pages
 
-
+I'm confused by how there are two kinds of virtual addresses (or something). 
+Like kalloc returns a physical address, but then allocuvm calls V2P on it, implying that it was virtual
+Some functions, like memset, need the virtual version of the physical address (as seen in allocuvm)
+but others, like mappages, need the physical version of the physical address (again, in allocuvm)
 
 
 Plan of attack:
@@ -75,3 +80,9 @@ Q6
 // (claire is this (the address of) the entry in the page directory or of the entry in the underlying page table? )
 static pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
+
+Q7
+in mappages, why are there two virtual addresses? one, passed into the function, the other returned by kalloc as the virtual physical address
+of the spot in memory. What does virtual physical address mean! In what sense is it virtual, why do we need to call P2V on it,
+what does all that - KernalBase stuff mean?????????
+????
