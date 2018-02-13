@@ -46,7 +46,15 @@ void share_memory_basic(){ // fork before get page access
 	}
 }
 
-
+void share_memory_test1_write_and_read_from_same_process(){
+	char* test_str = "Ann\n";
+	char* shared_page = (char*) shmem_access(0);
+	if( !shared_page ){ 
+		printf(stdout, "FAILED b/c allocation failed\n");
+		return;
+	}
+	strcpy(shared_page, test_str);
+}
 
 void share_memory_fork_after_get_page_access(){
 	
@@ -63,7 +71,9 @@ main(int argc, char *argv[])
 {
   //~ printf(stdout, "Starting proj 2 tests\n");
   //~ deref_null();
-  use_memory_not_in_page_table();
+  share_memory_test1_write_and_read_from_same_process();
   //~ share_memory_basic();
+  
+  //~ use_memory_not_in_page_table(); // for understanding
   exit();
 }

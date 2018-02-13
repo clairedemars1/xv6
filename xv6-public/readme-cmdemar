@@ -4,9 +4,14 @@ Project 2
 Due 2/13/2018
 
 Changes Made:
+
 	Nullptr Exceptions
-	- Makefile: changed entry point for all user executables (-Ttext flag argument)
+	- Makefile: changed entry point for all user executables 
+	(-Ttext flag argument)
 	- exec.c (exec function) : added guard page at bottom of user memory
+	- syscall.c (argptr function) checked that the requested access 
+	address was not in the nullptr guard page
+	
 	Shared Pages
 	- syscall setup: syscall.h, syscall.c usys.S, user.h
 	- 
@@ -66,4 +71,7 @@ vm.c
 why make a pointer here? 
 what you really need to do is take off the extra bits from the pointer part of it, which requires calling some function like PDX
 
-
+Q6 
+// (claire is this (the address of) the entry in the page directory or of the entry in the underlying page table? )
+static pte_t *
+walkpgdir(pde_t *pgdir, const void *va, int alloc)

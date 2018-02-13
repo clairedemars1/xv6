@@ -288,8 +288,8 @@ kfree	kalloc.c	/^kfree(char *v)$/
 kill	proc.c	/^kill(int pid)$/
 kinit1	kalloc.c	/^kinit1(void *vstart, void *vend)$/
 kinit2	kalloc.c	/^kinit2(void *vstart, void *vend)$/
-kmap	vm.c	105
-kmap	vm.c	110
+kmap	vm.c	116
+kmap	vm.c	121
 kmem	kalloc.c	24
 kpgdir	vm.c	11
 kvmalloc	vm.c	/^kvmalloc(void)$/
@@ -380,9 +380,9 @@ parseline	sh.c	/^parseline(char **ps, char *es)$/
 parsepipe	sh.c	/^parsepipe(char **ps, char *es)$/
 parseredirs	sh.c	/^parseredirs(struct cmd *cmd, char **ps, char *es)$/
 peek	sh.c	/^peek(char **ps, char *es, char *toks)$/
-perm	vm.c	109
-phys_end	vm.c	108
-phys_start	vm.c	107
+perm	vm.c	120
+phys_end	vm.c	119
+phys_start	vm.c	118
 picinit	picirq.c	/^picinit(void)$/
 pinit	proc.c	/^pinit(void)$/
 pipe	pipe.c	13
@@ -436,9 +436,11 @@ sched	proc.c	/^sched(void)$/
 scheduler	proc.c	/^scheduler(void)$/
 seginit	vm.c	/^seginit(void)$/
 setupkvm	vm.c	/^setupkvm(void)$/
-share_memory_basic	test.c	/^void share_memory_basic(){$/
+share_memory_basic	test.c	/^void share_memory_basic(){ \/\/ fork before get page/
 share_memory_fork_after_get_page_access	test.c	/^void share_memory_fork_after_get_page_access(){$/
+share_memory_test1_write_and_read_from_same_process	test.c	/^void share_memory_test1_write_and_read_from_same_p/
 sharedfd	usertests.c	/^sharedfd(void)$/
+shmem_access	vm.c	/^void* shmem_access(int pg_num){$/
 size	log.c	42
 size	umalloc.c	14
 skipelem	fs.c	/^skipelem(char *path, char *name)$/
@@ -449,7 +451,7 @@ stat	mkfs.c	8
 stat	ulib.c	/^stat(char *n, struct stat *st)$/
 stati	fs.c	/^stati(struct inode *ip, struct stat *st)$/
 static_assert	mkfs.c	/^#define static_assert(a, b) do { switch (0) case 0/
-stdout	test.c	4
+stdout	test.c	5
 stdout	testgetprocsinfo.c	6
 stdout	usertests.c	14
 strchr	ulib.c	/^strchr(const char *s, char c)$/
@@ -510,11 +512,12 @@ uio	usertests.c	/^uio()$/
 uninit	usertests.c	1593
 unlinkread	usertests.c	/^unlinkread(void)$/
 use_lock	kalloc.c	22
+use_memory_not_in_page_table	test.c	/^void use_memory_not_in_page_table(){$/
 userinit	proc.c	/^userinit(void)$/
 uva2ka	vm.c	/^uva2ka(pde_t *pgdir, char *uva)$/
 validateint	usertests.c	/^validateint(int *p)$/
 validatetest	usertests.c	/^validatetest(void)$/
-virt	vm.c	106
+virt	vm.c	117
 w	console.c	185
 wait	proc.c	/^wait(void)$/
 waitdisk	bootmain.c	/^waitdisk(void)$/

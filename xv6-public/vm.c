@@ -32,9 +32,19 @@ seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
+// (claire: it does not allocate physical memory or set the pte address to point to physical memory)
+// (claire is this (the address of) the entry in the page directory or of the entry in the underlying page table? )
 static pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
+	// A virtual address 'la' has a three-part structure as follows:
+	//
+	// +--------10------+-------10-------+---------12----------+
+	// | Page Directory |   Page Table   | Offset within Page  |
+	// |      Index     |      Index     |                     |
+	// +----------------+----------------+---------------------+
+	//  \--- PDX(va) --/ \--- PTX(va) --/
+				
   pde_t *pde; // pointer to page directory entry (*not* to page table entry)
 				// note: it's sorta a double pointer, since the entry itself is a pointer with some extra status bits
   pte_t *pgtab; // pointer to page table entry (entry not whole table: so could be called pte)
@@ -42,21 +52,14 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
   pde = &pgdir[PDX(va)]; // get pde: get the page dir index for that virtual address, look there in the page dir
   // this is a pointer to the right place in the page directory
   // i think the order is &( pgdir[PDX(va)] )
+  // it's a pointer so you can check it's flags
   if(*pde & PTE_P){ // go to the right place in the page directory, if any pages are allocated in it
     pgtab = (pte_t*)P2V(PTE_ADDR(*pde)); 
     // get the (physical) address of the beginning of the page of pg *table* entries
     //  convert it to virtual address
-  } else {
-	  
-    //~ if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
-    pgtab = (pte_t*)kalloc();
+  } else { // the page directory entry is not filled in, so we need to fill it in
     
-    // this is, alas, not what catches the page fault
-    //~ if (pgtab == 0){
-		//~ cprintf("aha\n");
-	//~ } 
-	
-    if(!alloc || pgtab == 0)
+    if(!alloc || ( pgtab = (pte_t*)kalloc() ) == 0)
       return 0;
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);
@@ -66,12 +69,15 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
   }
   return &pgtab[PTX(va)]; // pgtab is a pointer to a page-worth of pte,
-  // so get the page part of the virtual address, and return a pointer to that entry (without checking it's presense bits or anything)
+  // so get the page part of the virtual address, 
+  // and return a pointer to the right entry within it 
+  // which has the address of the physical memory (if actually set) and the presence bit, which we haven't actually checked 
 }
 
 // Create PTEs for virtual addresses starting at va that refer to
-// physical addresses starting at pa. va and size might not
-// be page-aligned.
+// physical addresses starting at pa and going to pg + size (page aligned).
+// va and size might not be page-aligned.
+// perm is permissions
 static int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
@@ -81,13 +87,13 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   a = (char*)PGROUNDDOWN((uint)va);
   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
   for(;;){
-    if((pte = walkpgdir(pgdir, a, 1)) == 0)
+    if((pte = walkpgdir(pgdir, a, 1)) == 0) // try to create the pte
       return -1;
     if(*pte & PTE_P)
-      panic("remap");
-    *pte = pa | perm | PTE_P;
-    if(a == last)
-      break;
+      panic("remap"); // if the pte had already been mapped to physical memory, throw error
+    *pte = pa | perm | PTE_P; // combine the physical address with the flags, using bitwise or, to make the pte
+    if(a == last) // basically the while loop condition, so it allocates all necessary pages
+      break; 
     a += PGSIZE;
     pa += PGSIZE;
   }
@@ -237,7 +243,7 @@ int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
   char *mem;
-  uint a;
+  uint a; // virtual address
 
   if(newsz >= KERNBASE)
     return 0;
@@ -245,15 +251,16 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     return oldsz;
 
   a = PGROUNDUP(oldsz);
-  for(; a < newsz; a += PGSIZE){
-    mem = kalloc();
+  for(; a < newsz; a += PGSIZE){ // for page necessary to meet the requested amount of memory
+    mem = kalloc(); // allocate a physical page, and get its *virtual* address
     if(mem == 0){
       cprintf("allocuvm out of memory\n");
       deallocuvm(pgdir, newsz, oldsz);
       return 0;
     }
-    memset(mem, 0, PGSIZE);
-    if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
+    memset(mem, 0, PGSIZE); // initialize all memory to zero 
+    // map the page to the physical address, giving it user and write permissions
+    if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){ 
       cprintf("allocuvm out of memory (2)\n");
       deallocuvm(pgdir, newsz, oldsz);
       kfree(mem);
@@ -405,6 +412,51 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+#define NSH 4 // number of shared pages allowed
+typedef struct sh_pg { // shared page
+	int reference_count;
+	void* phy_addr; 
+} sh_pg;
+sh_pg shared_pages[NSH];
+
+typedef enum { do_not_alloc, do_alloc } alloc;
+
+void* address_of_shared_page_with_number(int pg_num){
+	// 0 if absent
+	// check the ptes for the top 4 page-sized pieces of user memory
+	void* pg_addr = 0; // 0 until found
+	
+	pde_t* pgdir = myproc()->pgdir;
+	int i;
+	void* page_ptr = (void*) KERNBASE;
+	pte_t* pte_ptr; 
+	
+	for(i=0; i<NSH && !pg_addr; i++){
+		page_ptr-= PGSIZE;
+		if ( (pte_ptr = walkpgdir(pgdir, page_ptr, do_not_alloc) ) != 0 ){ 
+			// there is a chance the page is allocated (b/c the pgdir entry for that batch of pages is valid/present)
+			if ( (*pte_ptr) & PTE_P){ // the page is allocated
+				pg_addr = (void*) PTE_ADDR(*pte_ptr);
+			}
+		}
+	} // end for
+	
+	return pg_addr; 
+}
+
 void* shmem_access(int pg_num){
+	if (pg_num > NSH-1 || pg_num < 0 ){ return 0; } // out of range
+	// see if the process already has a reference to that number page
+	void* shared_page = address_of_shared_page_with_number(pg_num); // 0 if absent, address if present
+	if ( shared_page ) {
+		// if so, return it's virtual address, and increment it's reference count
+		shared_pages[pg_num].reference_count++;
+		return shared_page;
+	} else {
+	// if not, allocate a new page (kalloc), link it up to the page table (at the highest spot in user memory)
+	// and return it's address
+		
+	}
+	
 	return 0;
 }
