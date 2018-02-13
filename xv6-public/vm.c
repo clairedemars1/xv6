@@ -335,9 +335,9 @@ clearpteu(pde_t *pgdir, char *uva)
 // Given a parent process's page table, create a copy
 // of it for a child.
 pde_t*
-copyuvm(pde_t *pgdir, uint sz)
+copyuvm(pde_t *parent_pgdir, uint sz, struct proc* child_proc)
 {
-  pde_t *d;
+  pde_t *d; // new directory 
   pte_t *pte;
   uint pa, i, flags;
   char *mem;
@@ -347,7 +347,7 @@ copyuvm(pde_t *pgdir, uint sz)
     
   // copy regular stuff
   for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+    if((pte = walkpgdir(parent_pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
@@ -360,26 +360,33 @@ copyuvm(pde_t *pgdir, uint sz)
       goto bad;
   }
   // copy shared pages
-  /*
   struct sh_pg* shared_pages = myproc()->shared_pages; // old process's shared pages
   int j;
-  
-  
   for (j = 0; j < NSH; j++){
-	  void* va;
-	  if( (va = shared_pages[j].virtual_addr) != 0){ // found a shared page
-		  // copy over to new process's pgdir
-		  pte_t* pte = ; // do allocate 
-		  if ( walkpgdir(pgdir, va, 1) == 0 ){
-			  cprint("bad - to claire\n");
-			  goto bad;
-		  } else {
-			global_shared_pages[j].reference_count++;
-		  }
+	void* va;
+	if( (va = shared_pages[j].virtual_addr) != 0){ // found a shared page
+		// copy it over to new process's pgdir
+
+		// the page's physical address (in actual physical form)
+		pa = (uint) global_shared_pages[j].phys_addr; 
+		  
+		// the page's flags
+		if((pte = walkpgdir(parent_pgdir, va, 0)) == 0)
+		  panic("copyuvm: pte should exist");
+		if(!(*pte & PTE_P))
+		  panic("copyuvm: page not present");
+		//~ pa = PTE_ADDR(*pte); // already got it
+		flags = PTE_FLAGS(*pte);
+			  
+		if(mappages(d, va, PGSIZE, pa, flags) < 0) { // no reason not to use the same va
+			goto bad;
+		}
+
+		// update records
+		child_proc->shared_pages[j].virtual_addr = va;
+		global_shared_pages[j].reference_count++;
 	  }
   }
-  
-  */
   return d;
 
 bad:
@@ -510,7 +517,6 @@ void* shmem_access(int pg_num){
 		  return 0;
 		}
 		// update reference count if and only if this process didn't have access before
-		cprintf("incrementing ref count \n");
 		global_shared_pages[pg_num].reference_count++;
 	} // end if
 	

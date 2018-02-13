@@ -198,7 +198,7 @@ fork(void)
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
@@ -249,6 +249,12 @@ exit(void)
   for (i=0; i< NSH; i++){
 	  if (shared_pages[i].virtual_addr){
 		  global_shared_pages[i].reference_count--;
+		  if (global_shared_pages[i].reference_count == 0){
+			  // free that page
+			  //~ kfree( P2V(global_shared_pages[i].phys_addr) ); // i tried with and without this
+			  global_shared_pages[i].phys_addr = 0;
+
+		  }
 	  }
   }
 

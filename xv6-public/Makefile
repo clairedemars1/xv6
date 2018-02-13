@@ -176,6 +176,7 @@ UPROGS=\
 	_usertests\
 	_testgetprocsinfo\
 	_test\
+	_test_null_deref\
 	_wc\
 	_zombie\
 

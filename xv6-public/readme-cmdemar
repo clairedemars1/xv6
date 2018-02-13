@@ -3,6 +3,19 @@ Advanced OS
 Project 2
 Due 2/13/2018
 
+Testing code: 
+
+	there are two executables
+		test_null_deref
+		test for the shared pages
+		
+	before I changed copyuvm, all test cases except the last worked
+		changing copyuvm caused kfree errors, but I couldn't isolate them 
+		(tried: wrapping every possible kfree in print statements; using 
+		dbg mode, but couldn't get it to start) 
+
+
+
 Changes Made:
 
 	Nullptr Exceptions
@@ -18,56 +31,10 @@ Changes Made:
 	- proc.h: made global_shared_pages[NSH]. 
 	- vm.c: Made process-specific shared_pages[NSH] in proc struct
 	- proc.c:  (allocproc function) initialized process's shared_pages
-			(exit function) decrement reference count when a process exits
+			(exit function) decrement reference count when a process exits, if reference count is 0, kfree the physical memory
+	- defs.h and proc.c added a param to copyuvm so it took a pointer to the new proc, 
+	so could let the new proc know it had shared pages, if applicable
+	- vm.c (deallocuvm function) don't let it double free shared memory
 			
 
-I'm confused by how there seem to be two kinds of virtual addresses.
-Like kalloc returns a physical address, but then allocuvm calls V2P on it, implying that it was virtual
-Some functions, like memset, need the virtual version of the physical address (as seen in allocuvm)
-but others, like mappages, need the physical version of the physical address (again, in allocuvm)
 
-hint
-tell other guy to sleep, write, other guy wakes and reads
-
-Notes:
-how does paging do protection? what replaces base and bound? Answer: if the first part of the address doesn't match an entry
-in the page table (see walkpgdir)
-
-	
-Questions
-Q1
-- exec.c
-a. what is ph.vaddr vs ph.memsize, are they redundant?
-b. exec checks if the binary requests an amount of memory (ph.vaddr)
-that is a multiple of the page size, and if not, it exits, but how would the binary know what page size you use?
- I guess the compiler asks the OS when it makes the binary?
- Q2
- - base and bounds are checked by hardware (at least for user code), so why does the argptr function
- check them? the argptr function is kernal, but why wouldn't the kernal just use the existing machinery, and load it's own bounds limit
- into tohe bounds register? well, for one, b/c their is no base and bounds, it's become the page table now (which only the kernal can edit)
-
-Q3 - git
-a. tags in .gitignore file is not working, why?
-b. Branch shmem set up to track remote branch shmem from origin.
-
-Q4
-the anding, 
-eg #define PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF) in mmu.h
-eg page directory index PDX in mmu.h
-
-Q5
-vm.c
-  pde = &pgdir[PDX(va)];
-why make a pointer here? 
-what you really need to do is take off the extra bits from the pointer part of it, which requires calling some function like PDX
-
-Q6 
-// (claire is this (the address of) the entry in the page directory or of the entry in the underlying page table? )
-static pte_t *
-walkpgdir(pde_t *pgdir, const void *va, int alloc)
-
-Q7
-in mappages, why are there two virtual addresses? one, passed into the function, the other returned by kalloc as the virtual physical address
-of the spot in memory. What does virtual physical address mean! In what sense is it virtual, why do we need to call P2V on it,
-what does all that - KernalBase stuff mean?????????
-????
