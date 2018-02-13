@@ -242,6 +242,17 @@ exit(void)
   if(curproc == initproc)
     panic("init exiting");
 
+  // manage references to shared pages
+  // if it has references to any shared pages, find them in the global structure and decrement their reference counts
+  struct sh_pg* shared_pages = curproc->shared_pages;
+  int i;
+  for (i=0; i< NSH; i++){
+	  if (shared_pages[i].virtual_addr){
+		  global_shared_pages[i].reference_count--;
+	  }
+	  
+  }
+
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
     if(curproc->ofile[fd]){
@@ -268,7 +279,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
-
+  
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();

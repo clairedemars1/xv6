@@ -405,14 +405,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   return 0;
 }
 
-
-
-typedef struct global_sh_pg { // global shared page
-	int reference_count;
-	void* phys_addr;  // actually physical (not kernal version of physical)
-} global_sh_pg;
-global_sh_pg global_shared_pages[NSH];
-
 //~ typedef enum { do_not_alloc, do_alloc } alloc;
 
 void* va_of_shared_page_for_cur_process(int pg_num){

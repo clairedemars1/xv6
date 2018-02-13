@@ -1,3 +1,10 @@
+// Global state
+typedef struct global_sh_pg { // global shared page
+	int reference_count;
+	void* phys_addr;  // actually physical (not kernal version of physical)
+} global_sh_pg;
+global_sh_pg global_shared_pages[NSH]; // automatically zero initialized
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID
