@@ -17,16 +17,6 @@ void print_kernal_ref_counts(){
 	printf(1, "%d %d %d %d\n", shmem_count(0), shmem_count(1), shmem_count(2), shmem_count(3));
 }
 
-void deref_null(){
-	
-	char* ptr = 0;
-	
-	printf(stdout, "now");
-	*ptr = 'a'; // trap
-	//~ printf(stdout, ptr); // trap
-	//~ char t = *ptr; // linux trap, no trap in my code
-	//~ t++;
-}
 
 void ref_counts_after_process_exits(){
 	// starting ref counts 0 0 0 0 
@@ -39,14 +29,18 @@ void ref_counts_after_process_exits(){
 		if (shmem_count(pg_num) != 1 ){
 			print_test_result(0, name);
 		}
-		/*int pid2 = fork();
-		if (pid2 == 0){ // child
-			
-			printf(stdout, "exit grandchild\n");
+		int pid2 = fork();
+		if (pid2 == 0){ // grandchild
+			if (shmem_count(pg_num) != 2 ){
+				print_test_result(0, name);
+			}
 			exit();
 		} else {
 			wait();
-		}*/
+			if (shmem_count(pg_num) != 1 ){
+				print_test_result(0, name);
+			}
+		} 
 		exit();
 	} else {
 		wait(); // let child go first
@@ -59,7 +53,7 @@ void ref_counts_after_process_exits(){
 	}
 }
 
-void two_processes_simultaneously__fork_is_irrelevant(){
+void two_processes_get_access_after_fork(){
 	// starting reference counts 0 0 0 0
 	// exit reference counts		0 0 0 1
 	char* name = "two_processes_simultaneously__fork_is_irrelevant";
@@ -101,7 +95,7 @@ void two_processes_simultaneously__fork_is_irrelevant(){
 
 void process_gets_access_then_forks(){
 	// starting reference counts	0 0 0 1
-	// exit 						0 1 0 0 
+	// exit 						0 1 0 1 
 	char* name = "process_gets_access_then_forks";
 	char* test_str = "Bob\n";
 	int pg_num = 1; 
@@ -123,7 +117,7 @@ void process_gets_access_then_forks(){
 	if (pid == 0){ // child
 		// 0 2 0 0
 		sleep(200); // let parent go first
-		if( shmem_count(pg_num) != 2 ){
+		if( shmem_count(pg_num) != 2 ){ 
 			print_test_result(0, name);
 			printf(stdout, "ref count %d\n", shmem_count(pg_num));
 			return; 
@@ -141,6 +135,48 @@ void process_gets_access_then_forks(){
 	}
 }
 
+
+
+
+void basic_ref_counts(){
+	// starting 0101
+	// ending	1201 (b/c requests on 0, 1)
+	int passed = 1; 
+	char* ret;
+	char* name = "basic_ref_counts";
+		
+	// invalid page number requests
+	ret = shmem_access(4);
+	if (ret != 0) passed = 0;
+	ret = shmem_access(-1); 
+	if (ret != 0) passed = 0;
+	
+	int pid = fork(); // 0202
+	if (pid == 0) {
+		print_kernal_ref_counts();
+			
+		// show that pg_num == 0 does not cause weird zeroey stuff
+		shmem_access(0); // 1202
+		
+		//check it's right
+		print_kernal_ref_counts();
+		if (shmem_count(0) != 1
+			|| shmem_count(1) != 2
+			|| shmem_count(2) != 0
+			|| shmem_count(3) != 2){
+			passed = 0;
+		}
+		print_test_result(passed, name);	
+		
+		exit();
+
+	} else {
+		wait();
+		print_kernal_ref_counts(); //0101
+	}
+}
+
+
 void parent_of_dead_child_cannot_see_childs_writing_post_mortem(){
 	// didn't get to this
 	
@@ -151,20 +187,20 @@ void parent_of_dead_child_cannot_see_childs_writing_post_mortem(){
 		// then the parent should find nothing. Because when the child died, 
 		// the shared page would have a reference count of zero 
 		// (assuming no other processs are sharing it) and so it should be gotten rid of
+		
+		// parent waits for child, child writes then dies
+		// parent should not be able to read what child wrote
+		
 }
 
 int
 main(int argc, char *argv[])
 {
-	// failing test  these both had 2 as pgnum 
-	//		ref_counts_after_process_exit 
-	// 		process_gets_access_then_forks 
-	// ie 232 
-	// same bug for 131
-  
-	ref_counts_after_process_exits();
-    two_processes_simultaneously__fork_is_irrelevant();
-	process_gets_access_then_forks();
+	// function 0 and 3 use same page number, which tests process's shared_pages initialization (I know b/c it used to have bug)
+	ref_counts_after_process_exits(); // pg num 1
+    two_processes_get_access_after_fork(); // pg num 3
+	process_gets_access_then_forks(); // pg num 1
+	basic_ref_counts(); 
   
   exit();
 }

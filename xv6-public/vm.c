@@ -534,6 +534,7 @@ void* pa_of_shared_page_for_any_process(int pg_num){
 
 
 void* shmem_access(int pg_num){
+	// return 0 on bad request
 	
 	// of the shared page
 	char* user_va = 0; // user_va
