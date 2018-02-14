@@ -59,7 +59,7 @@ void share_memory_basic(){ // fork before get page access
 
 void ref_counts_after_process_exits(){
 	char* name = "ref_counts_after_process_exits";
-	int pg_num = 2; // when both this and later test used 1, later test failed
+	int pg_num = 1; // when both this and later test used 1, later test failed
 	int pid = fork();
 	if (pid == 0){ // child
 		shmem_access(pg_num);
@@ -100,10 +100,12 @@ void two_processes_simultaneously__fork_is_irrelevant(){
 		running_ref_counts[pg_num]++;
 		if( shmem_count(pg_num) != running_ref_counts[pg_num]){
 			print_test_result(0, name);
+			printf(stdout, "case 1\n");
 			return; 
 		}
 		if (strcmp(childs_shared_page, test_str) != 0){ 
 			print_test_result(0, name);
+			printf(stdout, "case 2\n");
 			return; 
 		}
 		print_test_result(1, name); 
@@ -120,7 +122,8 @@ void two_processes_simultaneously__fork_is_irrelevant(){
 void process_gets_access_then_forks(){
 	char* name = "process_gets_access_then_forks";
 	char* test_str = "Bob\n";
-	int pg_num = 2; // was failing with 1 b/c another guy used 1 before and messed up the reference counts
+	int pg_num = 1; 
+	
 	
 	char* shared_page = shmem_access(pg_num);
 	running_ref_counts[pg_num]++;
@@ -164,13 +167,17 @@ void parent_of_dead_child_cannot_see_childs_writing_post_mortem(){
 int
 main(int argc, char *argv[])
 {
+	// failing test  these both had 2 as pgnum 
+	//		ref_counts_after_process_exit 
+	// 		process_gets_access_then_forks 
+	// ie 232 
+	// same bug for 131
   printf(stdout, "Starting proj 2 tests\n");
   //~ deref_null();
   
-  // Note: these each pass independently, but not together (kfree errors, probably something wrong with copying)
-	ref_counts_after_process_exits();
+	//~ ref_counts_after_process_exits();
   two_processes_simultaneously__fork_is_irrelevant();
-  process_gets_access_then_forks();
+  //~ process_gets_access_then_forks();
   
   exit();
 }

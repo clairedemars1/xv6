@@ -426,15 +426,16 @@ copyuvm(pde_t *parent_pgdir, uint sz, struct proc* child_proc)
 	void* va;
 	if( (va = shared_pages[j].virtual_addr) != 0){ // found a shared page
 		// copy it over to new process's pgdir
-
+		cprintf("trying to copy shared page %d\n", j); 
+		
 		// the page's physical address (in actual physical form)
 		pa = (uint) global_shared_pages[j].phys_addr; 
 		  
 		// the page's flags
 		if((pte = walkpgdir(parent_pgdir, va, 0)) == 0)
-		  panic("copyuvm: pte should exist");
+		  panic("copyuvm: pte should exist line 435\n");
 		if(!(*pte & PTE_P))
-		  panic("copyuvm: page not present");
+		  panic("copyuvm: page not present line 437\n");
 		//~ pa = PTE_ADDR(*pte); // already got it
 		flags = PTE_FLAGS(*pte);
 			  
