@@ -150,6 +150,8 @@ void basic_ref_counts(){
 	if (ret != 0) passed = 0;
 	ret = shmem_access(-1); 
 	if (ret != 0) passed = 0;
+	int count = shmem_count(4);
+	if (count != -1) passed = 0;
 	
 	int pid = fork(); // 0202
 	if (pid == 0) {
@@ -214,7 +216,7 @@ main(int argc, char *argv[])
 	ref_counts_after_process_exits(); // pg num 1
     two_processes_get_access_after_fork(); // pg num 3
 	process_gets_access_then_forks(); // pg num 1
-	basic_ref_counts(); 
+	basic_ref_counts();  // tests bad arguments to sys calls
 	parent_of_dead_child_cannot_see_childs_writing_post_mortem(); // not really a test
   
   exit();

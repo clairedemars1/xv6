@@ -512,8 +512,10 @@ void* next_available_shared_memory_va_of_cur_process(){
 		// while have not found next_avail, look for it in the top 4 pages
 		page_ptr-= PGSIZE; // potential virtual address of the page
 		
-		// check if page_ptr it's actually being used as a shared page 
 		int is_being_used = 0;
+		if (page_ptr < (char*) myproc()->sz){ is_being_used = 1; } // avoid eating the heap
+		
+		// check if page_ptr it's actually being used as a shared page 
 		for (j=0; j<NSH; j++){ 
 			if (page_ptr == shared_pages[j].virtual_addr){
 				is_being_used = 1;
@@ -591,6 +593,8 @@ void* shmem_access(int pg_num){
 }
 
 int shmem_count(int pg_num){
+	if (pg_num >= NSH || pg_num < 0 ){ return -1; } // bad request
+
 	return global_shared_pages[pg_num].reference_count;
 }
 

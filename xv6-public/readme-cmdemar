@@ -2,21 +2,12 @@ Claire DeMars
 Advanced OS
 Project 2
 Due 2/13/2018
+1 day late
 
 Testing code: 
-
 	there are two executables
 		test_null_deref
 		test for the shared pages
-		
-	tests don't all work: 
-		before I changed copyuvm, all test cases except the last worked
-		I think copyuvm caused the kfree errors present now,
-		so probably I'm copying the memory wrong when forking and causing a double free
-		but I couldn't isolate the error source
-		(tried: wrapping each possible kfree in print statements; using 
-		dbg mode- but couldn't get it to work) 
-
 
 Changes Made:
 
@@ -26,16 +17,21 @@ Changes Made:
 	- exec.c (exec function) : added guard page at bottom of user memory
 	- syscall.c (argptr function) checked that the requested access 
 	address was not in the nullptr guard page
+	-test_null_deref.c
 	
 	Shared Pages
 	- syscall setup - syscall.h, syscall.c usys.S, user.h
 	- params.h defined number of shared pages allowed (NSH)
-	- proc.h: made global_shared_pages[NSH]. 
-	- vm.c: Made process-specific shared_pages[NSH] in proc struct
+	- proc.h: made global_shared_pages[NSH] (which holds all reference counts and the physical address of the page (the pa is also in
+	 the ptes)
+	- vm.c: Made process-specific shared_pages[NSH] in proc struct, holding virtual address of any shared pages for that process 
 	- proc.c:  (allocproc function) initialized process's shared_pages
-			(exit function) decrement reference count when a process exits, if reference count is 0, kfree the physical memory
 	- defs.h and proc.c added a param to copyuvm so it took a pointer to the new proc, 
 	so could let the new proc know it had shared pages, if applicable
-	- vm.c (deallocuvm function) don't let it double free shared memory
-
+	- vm.c freevm, changed it so it decremented ref counts and only freed the shared pages if their reference counts were 0.
+		copyuvm, copied over shared page info to the new process and incremented reference counts
+		shmem_access and shmem_count implementations, and their helper functions
+		they handle bad arguments, and if there is no vm for shared pages b/c the heap is too big
+		(e.g. line 515)
+	- test.c: test code
 
