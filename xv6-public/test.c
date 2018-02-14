@@ -56,7 +56,7 @@ void ref_counts_after_process_exits(){
 void two_processes_get_access_after_fork(){
 	// starting reference counts 0 0 0 0
 	// exit reference counts		0 0 0 1
-	char* name = "two_processes_simultaneously__fork_is_irrelevant";
+	char* name = "two_processes_get_access_after_fork";
 	char* test_str = "Ann\n";
 	int pg_num = 3;
 	int pid = fork();
@@ -140,7 +140,7 @@ void process_gets_access_then_forks(){
 
 void basic_ref_counts(){
 	// starting 0101
-	// ending	1201 (b/c requests on 0, 1)
+	// ending	0101 (b/c requests on 0, 1)
 	int passed = 1; 
 	char* ret;
 	char* name = "basic_ref_counts";
@@ -178,19 +178,33 @@ void basic_ref_counts(){
 
 
 void parent_of_dead_child_cannot_see_childs_writing_post_mortem(){
-	// didn't get to this
+	// this is not really a test, more of a check for implementation bugs
+	// (which themselves are only bugs if I commit to a specific interpretation of something 
+	// that was left ambiguous in the assignment)
+	// basically it's just here b/c I didn't realize it wasn't very helpful until I spent time on it
 	
-	// code tries to free a page once it's reference count is zero
-		// for example, assuming no other processes,
-		// if a program forks, then the child gets access then write and exits
-		// and the parent waits until the child has exited then get access and read
-		// then the parent should find nothing. Because when the child died, 
-		// the shared page would have a reference count of zero 
-		// (assuming no other processs are sharing it) and so it should be gotten rid of
+	// parent waits for child, child writes then dies
+	// parent shouold not expect to be able to read what child wrote
+	
+	char* test_str = "Ca";
+	char* name = "parent_of_dead_child_cannot_see_childs_writing_post_mortem";
+	// starting 0101
+	// ending 1101
 		
-		// parent waits for child, child writes then dies
-		// parent should not be able to read what child wrote
-		
+	int pid = fork();
+	if (pid == 0){
+		char* pg = shmem_access(0);
+		strcpy(pg, test_str);
+		exit();
+	}else {
+		wait();
+		char* pg = shmem_access(0);
+		if (pg[0] == 'C' && pg[1] == 'a'){
+			printf(1, "Uncertain result: Could indicate a bug, but might just be same page being mapped to new va\n");
+		} else {
+			print_test_result(1, name);
+		}
+	}
 }
 
 int
@@ -201,6 +215,7 @@ main(int argc, char *argv[])
     two_processes_get_access_after_fork(); // pg num 3
 	process_gets_access_then_forks(); // pg num 1
 	basic_ref_counts(); 
+	parent_of_dead_child_cannot_see_childs_writing_post_mortem(); // not really a test
   
   exit();
 }
