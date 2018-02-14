@@ -10,7 +10,7 @@
 
 struct {
   struct spinlock lock;
-  struct proc proc[NPROC];
+  struct proc proc[NPROC]; // actually procs plural
 } ptable;
 
 static struct proc *initproc;
@@ -235,28 +235,15 @@ fork(void)
 void
 exit(void)
 {
+	// exit is not called for at the death of every process 
+	// (see init.c where we learn that most processes are ended by a wait call)
+  
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
 
   if(curproc == initproc)
     panic("init exiting");
-
-  // manage references to shared pages
-  // if it has references to any shared pages, find them in the global structure and decrement their reference counts
-  struct sh_pg* shared_pages = curproc->shared_pages;
-  int i;
-  for (i=0; i< NSH; i++){
-	  if (shared_pages[i].virtual_addr){
-		  global_shared_pages[i].reference_count--;
-		  if (global_shared_pages[i].reference_count == 0){
-			  // free that page
-			  //~ kfree( P2V(global_shared_pages[i].phys_addr) ); // i tried with and without this
-			  global_shared_pages[i].phys_addr = 0;
-
-		  }
-	  }
-  }
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -313,7 +300,7 @@ wait(void)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+        freevm(p->pgdir, p);
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;

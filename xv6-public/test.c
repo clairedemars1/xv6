@@ -78,10 +78,20 @@ void ref_counts_after_process_exits(){
 	int pid = fork();
 	if (pid == 0){ // child
 		shmem_access(1);
+		/*int pid2 = fork();
+		if (pid2 == 0){ // child
+			
+			printf(stdout, "exit grandchild\n");
+			exit();
+		} else {
+			wait();
+		}*/
+		printf(stdout, "exit child\n");
 		exit();
 	} else {
 		wait();
 		if( shmem_count(1) != 0){
+			printf(stdout, "ref count %d\n", shmem_count(1));
 			print_test_result(0, name);
 			return; 
 		}
@@ -160,8 +170,8 @@ main(int argc, char *argv[])
   //~ deref_null();
   
   // Note: these each pass independently, but not together (kfree errors, probably something wrong with copying)
-    ref_counts_after_process_exits();
-	basic_ref_counts(); 
+   	basic_ref_counts(); 
+	ref_counts_after_process_exits();
   //~ two_processes_simultaneously_fork_irrelevant();
   //~ process_gets_access_then_forks();
   

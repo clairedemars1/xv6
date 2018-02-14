@@ -150,7 +150,7 @@ setupkvm(void)
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
     if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,
                 (uint)k->phys_start, k->perm) < 0) {
-      freevm(pgdir);
+      freevm(pgdir, myproc());
       return 0;
     }
   return pgdir;
@@ -293,11 +293,6 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       if(pa == 0)
         panic("kfree");
       char *v = P2V(pa);
-      
-      // if page is shared page with reference count > 0, don't free it
-      // regardless, decrement the reference count
-      
-      
       kfree(v);
       *pte = 0;
     }
@@ -305,16 +300,76 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
+//  if user_va represents a shared page for the process, returns 1 
+// and sets out_page_num to the page's identifier
+// returns 0 and sets out_page_num to NSH
+int is_shared_f(char* user_va, struct proc* process, int* out_page_num){
+	*out_page_num = NSH;
+	struct sh_pg* shared_pages = process->shared_pages; 
+	int i;
+	for(i=0; i<NSH; i++){
+		if ( shared_pages[i].virtual_addr == user_va ){
+			*out_page_num = i;
+			return 1; // found shared page
+		}
+	}
+	return 0; // did not find
+}
+
 // Free a page table and all the physical memory pages
 // in the user part.
 void
-freevm(pde_t *pgdir)
+freevm(pde_t *pgdir, struct proc* process)
 {
+  cprintf("\tfreevm called for pid %d and process %s\n", process->pid, process->name);
   uint i;
 
   if(pgdir == 0)
     panic("freevm: no pgdir");
-  deallocuvm(pgdir, KERNBASE, 0);
+    
+  // all pages except top NSH-many
+  deallocuvm(pgdir, KERNBASE-NSH*PGSIZE, 0); 
+  
+  // top NSH-many pages
+  uint pa, va;
+  pte_t* pte;
+  int j;
+  for(j=0; j<NSH; j++){ // for each page
+    va = KERNBASE-(j+1)*PGSIZE;
+    
+    int shared_page_index;
+	int is_shared = is_shared_f((char*)va, process, &shared_page_index); // shared_page_index is output param
+	if (!is_shared ){ 
+		// free iff is in use (since it's not shared, that can only happen with an almost full heap)
+		pte = walkpgdir(pgdir, (char*)va, 0);
+		if( pte && ((*pte & PTE_P) != 0 ) ){ // in use
+		  pa = PTE_ADDR(*pte);
+		  if(pa == 0)
+			panic("kfree vm.c 347");
+		  char *kernal_va = P2V(pa);
+		  kfree(kernal_va);
+		  cprintf("setting pa to zero for pid %d (for unshared page)\n", process->pid);
+		  *pte = 0; // avoid dangling pointer
+		}						
+	} else { // is shared
+		
+		// free shared pages with reference count == 0
+		if (--(global_shared_pages[shared_page_index].reference_count) == 0 ){ // decrement ref count for any shared page
+			pa = (uint) global_shared_pages[shared_page_index].phys_addr; // we could also get this from the pte
+			if (pa == 0)
+				panic("shared page kfree");
+			kfree( P2V(pa) );
+			cprintf("setting pa to zero for pid %d\n", process->pid);
+			global_shared_pages[shared_page_index].phys_addr = 0; // avoid dangling pointer
+		}
+		
+		// avoid dangling pointer
+		pte = walkpgdir(pgdir, (char*)va, 0); 
+		if (pte) *pte = 0;
+	}
+  } // end for
+  
+  // free page dir 
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
       char * v = P2V(PTE_ADDR(pgdir[i]));
@@ -337,7 +392,7 @@ clearpteu(pde_t *pgdir, char *uva)
   *pte &= ~PTE_U;
 }
 
-// Given a parent process's page table, create a copy
+// Given a parent process's page table, create and return a copy
 // of it for a child.
 pde_t*
 copyuvm(pde_t *parent_pgdir, uint sz, struct proc* child_proc)
@@ -395,7 +450,7 @@ copyuvm(pde_t *parent_pgdir, uint sz, struct proc* child_proc)
   return d;
 
 bad:
-  freevm(d);
+  freevm(d, child_proc);
   return 0;
 }
 
