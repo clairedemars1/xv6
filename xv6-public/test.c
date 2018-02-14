@@ -86,7 +86,7 @@ void ref_counts_after_process_exits(){
 		} else {
 			wait();
 		}*/
-		printf(stdout, "exit child\n");
+		//~ printf(stdout, "exit child\n");
 		exit();
 	} else {
 		wait();
@@ -170,10 +170,10 @@ main(int argc, char *argv[])
   //~ deref_null();
   
   // Note: these each pass independently, but not together (kfree errors, probably something wrong with copying)
-   	basic_ref_counts(); 
+   	basic_ref_counts();  //works by itself
 	ref_counts_after_process_exits();
-  //~ two_processes_simultaneously_fork_irrelevant();
-  //~ process_gets_access_then_forks();
+  two_processes_simultaneously_fork_irrelevant();
+  process_gets_access_then_forks();
   
   exit();
 }

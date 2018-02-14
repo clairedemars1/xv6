@@ -321,7 +321,7 @@ int is_shared_f(char* user_va, struct proc* process, int* out_page_num){
 void
 freevm(pde_t *pgdir, struct proc* process)
 {
-  cprintf("\tfreevm called for pid %d and process %s\n", process->pid, process->name);
+  //~ cprintf("\tfreevm called for pid %d and process %s\n", process->pid, process->name);
   uint i;
 
   if(pgdir == 0)
@@ -348,7 +348,7 @@ freevm(pde_t *pgdir, struct proc* process)
 			panic("kfree vm.c 347");
 		  char *kernal_va = P2V(pa);
 		  kfree(kernal_va);
-		  cprintf("setting pa to zero for pid %d (for unshared page)\n", process->pid);
+		  //~ cprintf("setting pa to zero for pid %d (for unshared page)\n", process->pid);
 		  *pte = 0; // avoid dangling pointer
 		}						
 	} else { // is shared
@@ -359,7 +359,7 @@ freevm(pde_t *pgdir, struct proc* process)
 			if (pa == 0)
 				panic("shared page kfree");
 			kfree( P2V(pa) );
-			cprintf("setting pa to zero for pid %d\n", process->pid);
+			//~ cprintf("setting pa to zero for pid %d\n", process->pid);
 			global_shared_pages[shared_page_index].phys_addr = 0; // avoid dangling pointer
 		}
 		
@@ -534,8 +534,10 @@ void* pa_of_shared_page_for_any_process(int pg_num){
 
 void* shmem_access(int pg_num){
 	
-	void* shared_pg_va = 0; // virtual
-	void* shared_pg_pa = 0; // physical (but "virtual" version of physical? ie one that this process can use?! oh my gosh)
+	// of the shared page
+	char* user_va = 0; // user_va
+	char* kernal_va = 0; // kernal_va
+	
 	pde_t* pgdir = myproc()->pgdir; 
 	
 	if (pg_num >= NSH || pg_num < 0 ){ return 0; } // bad request
@@ -548,41 +550,42 @@ void* shmem_access(int pg_num){
 	// 		map the va to the pa
 	// update the global info 
 	
-	if ( (shared_pg_va = va_of_shared_page_for_cur_process(pg_num) ) == 0 ) {
+	if ( (user_va = va_of_shared_page_for_cur_process(pg_num) ) == 0 ) {
 		// find out what va we need
-		shared_pg_va = next_available_shared_memory_va_of_cur_process(); 
+		user_va = next_available_shared_memory_va_of_cur_process(); 
 		
+		char* pa = 0; // pa
 		// get or set page's pa
-		if ( ( shared_pg_pa = pa_of_shared_page_for_any_process(pg_num)) == 0 ){
+		if ( ( pa = pa_of_shared_page_for_any_process(pg_num)) == 0 ){
 			// pa dne (ie page is not allocated for *any* process) so set it
 			// allocate a new page 
-			shared_pg_pa = kalloc(); // is this physical??
-			if (shared_pg_pa == 0 ){
+			kernal_va = kalloc(); 
+			if (kernal_va == 0 ){
 				cprintf("shmem_access out of physical memory\n");
 				return 0;
 			}
-			memset(shared_pg_pa, 0, PGSIZE); // initialize to zero
-			
-			// pa has to be actually physical to use in mappages and store in global info about shared pages
-			shared_pg_pa = (void*) V2P(shared_pg_pa); 
+			pa = (char*) V2P(kernal_va);
+			memset(kernal_va, 0, PGSIZE); // initialize to zero
+						
 		} // end nested if
 		
 		// map the va to the pa: making it a real va 
 		// 		(in that the page table knows that va has a physical space assigned to it
-		//~ cprintf("trying to give it this va %p %p \n", shared_pg_va, (char*) shared_pg_va );
-		if(mappages(pgdir, (char*)shared_pg_va, PGSIZE, (uint) shared_pg_pa, PTE_W|PTE_U) < 0){ 
+		//~ cprintf("trying to give it this va %p %p \n", user_va, (char*) shared_pg_va );
+		if(mappages(pgdir, (char*)user_va, PGSIZE, (uint) pa, PTE_W|PTE_U) < 0){ 
 		  cprintf("shmem access out of memory (2)\n");
-		  kfree(P2V(shared_pg_pa)); // change it back for kfree
+		  kfree(P2V(pa));
 		  return 0;
 		}
 		// update reference count if and only if this process didn't have access before
 		global_shared_pages[pg_num].reference_count++;
+		global_shared_pages[pg_num].phys_addr = pa;
+
 	} // end if
 	
-	global_shared_pages[pg_num].phys_addr = shared_pg_pa; 
-	myproc()->shared_pages[pg_num].virtual_addr = shared_pg_va; 
+	myproc()->shared_pages[pg_num].virtual_addr = user_va; 
 	
-	return shared_pg_va;
+	return user_va;
 }
 
 int shmem_count(int pg_num){
