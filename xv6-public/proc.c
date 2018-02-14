@@ -235,7 +235,7 @@ fork(void)
 void
 exit(void)
 {
-	// exit is not called for at the death of every process 
+	// exit is not called at the death of every process 
 	// (see init.c where we learn that most processes are ended by a wait call)
   
   struct proc *curproc = myproc();
@@ -295,6 +295,7 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
+      //~ cprintf("\tfound a kid to clean up\n");
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;

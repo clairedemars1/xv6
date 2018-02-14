@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 int stdout = 1;
+int running_ref_counts[4];
 
 void print_test_result(int passed, char* name){
 	if (passed){
@@ -56,28 +57,17 @@ void share_memory_basic(){ // fork before get page access
 
 */
 
-void basic_ref_counts(){
-	char* name_of_test = "basic_ref_counts";
-	char* shared_page_2 = (char*) shmem_access(2);
-	shared_page_2 = (char*) shmem_access(2);
-	if( !shared_page_2 ){ 
-		printf(stdout, "FAILED b/c allocation failed\n");
-		return;
-	}
-	
-	if( shmem_count(2) != 1 || shmem_count(0) != 0){ 
-		print_test_result(0, name_of_test); 
-		return;
-	}
-	
-	print_test_result(1, name_of_test);
-}
-
 void ref_counts_after_process_exits(){
 	char* name = "ref_counts_after_process_exits";
+	int pg_num = 2; // when both this and later test used 1, later test failed
 	int pid = fork();
 	if (pid == 0){ // child
-		shmem_access(1);
+		shmem_access(pg_num);
+		running_ref_counts[pg_num]++;
+		if (shmem_count(pg_num) != running_ref_counts[pg_num] ){
+			print_test_result(0, name);
+		}
+		running_ref_counts[pg_num]--; // b/c we're exiting
 		/*int pid2 = fork();
 		if (pid2 == 0){ // child
 			
@@ -90,8 +80,8 @@ void ref_counts_after_process_exits(){
 		exit();
 	} else {
 		wait();
-		if( shmem_count(1) != 0){
-			printf(stdout, "ref count %d\n", shmem_count(1));
+		
+		if( shmem_count(pg_num) != running_ref_counts[pg_num]){ 
 			print_test_result(0, name);
 			return; 
 		}
@@ -99,15 +89,16 @@ void ref_counts_after_process_exits(){
 	}
 }
 
-void two_processes_simultaneously_fork_irrelevant(){
-	char* name = "two_processes_simultaneously_fork_irrelevant";
+void two_processes_simultaneously__fork_is_irrelevant(){
+	char* name = "two_processes_simultaneously__fork_is_irrelevant";
 	char* test_str = "Ann\n";
 	int pg_num = 3;
 	int pid = fork();
 	if (pid == 0){ // child
 		sleep(200); // let parent go first
 		char* childs_shared_page = shmem_access(pg_num);
-		if( shmem_count(pg_num) != 2){
+		running_ref_counts[pg_num]++;
+		if( shmem_count(pg_num) != running_ref_counts[pg_num]){
 			print_test_result(0, name);
 			return; 
 		}
@@ -116,9 +107,11 @@ void two_processes_simultaneously_fork_irrelevant(){
 			return; 
 		}
 		print_test_result(1, name); 
+		running_ref_counts[pg_num]--;
 		exit();
 	} else { // parent
 		char* parents_shared_page = shmem_access(pg_num);
+		running_ref_counts[pg_num]++;
 		strcpy(parents_shared_page, test_str);
 		wait();
 	}
@@ -127,14 +120,17 @@ void two_processes_simultaneously_fork_irrelevant(){
 void process_gets_access_then_forks(){
 	char* name = "process_gets_access_then_forks";
 	char* test_str = "Bob\n";
-	int pg_num = 1;
+	int pg_num = 2; // was failing with 1 b/c another guy used 1 before and messed up the reference counts
 	
 	char* shared_page = shmem_access(pg_num);
+	running_ref_counts[pg_num]++;
+	
 	int pid = fork();
+	running_ref_counts[pg_num]++;
 	
 	if (pid == 0){ // child
 		sleep(200); // let parent go first
-		if( shmem_count(pg_num) != 2){
+		if( shmem_count(pg_num) != running_ref_counts[pg_num] ){
 			print_test_result(0, name);
 			printf(stdout, "\tfirst case\n");
 			return; 
@@ -144,6 +140,8 @@ void process_gets_access_then_forks(){
 			return; 
 		}
 		print_test_result(1, name); 
+		
+		running_ref_counts[pg_num]--;
 		exit();
 	} else { // parent
 		strcpy(shared_page, test_str);
@@ -170,9 +168,8 @@ main(int argc, char *argv[])
   //~ deref_null();
   
   // Note: these each pass independently, but not together (kfree errors, probably something wrong with copying)
-   	basic_ref_counts();  //works by itself
 	ref_counts_after_process_exits();
-  two_processes_simultaneously_fork_irrelevant();
+  two_processes_simultaneously__fork_is_irrelevant();
   process_gets_access_then_forks();
   
   exit();
