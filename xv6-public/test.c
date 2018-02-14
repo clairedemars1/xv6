@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 int stdout = 1;
-int running_ref_counts[4];
+//~ int running_ref_counts[4]; // stupid goober is not shared with child processes
 
 void print_test_result(int passed, char* name){
 	if (passed){
@@ -11,6 +11,10 @@ void print_test_result(int passed, char* name){
 	} else {
 		printf(stdout, "\tFAILED %s\n", name);
 	}
+}
+
+void print_kernal_ref_counts(){
+	printf(1, "%d %d %d %d\n", shmem_count(0), shmem_count(1), shmem_count(2), shmem_count(3));
 }
 
 void deref_null(){
@@ -24,50 +28,17 @@ void deref_null(){
 	//~ t++;
 }
 
-/*
-void share_memory_basic(){ // fork before get page access
-	char* test_str = "Ann\n";
-	int pid = fork();
-	if(pid < 0){
-		printf(stdout, "Fork failed\n");
-		exit();
-	}
-	else if (pid == 0){ // child goes first: writes
-		char* shared_page = (char*) shmem_access(2);
-		// //~ shared_page = "i ii iiiii"; // todo
-		
-		strcpy(shared_page, test_str);
-		//~ printf(stdout, "did it work?:%s\n", shared_page); // it worked
-		
-		printf(stdout, "child finished\n");
-		exit();
-	} else { // parent goes second: reads
-		wait();
-		
-		char *shared_page = (char *) shmem_access(2);
-		// //~ shared_page = test_str;
-		//~ printf(stdout, "%s", shared_page);
-		if (strcmp(shared_page, test_str) != 0){ 
-			printf(stdout, "PASSED share memory basic test\n");
-		} else {
-			printf(stdout, "\tFAILED share memory basic test\n");
-		}
-	}
-}
-
-*/
-
 void ref_counts_after_process_exits(){
+	// starting ref counts 0 0 0 0 
+	// exiting ref counts  0 0 0 0
 	char* name = "ref_counts_after_process_exits";
-	int pg_num = 1; // when both this and later test used 1, later test failed
+	int pg_num = 1; // change back to 1
 	int pid = fork();
-	if (pid == 0){ // child
+	if (pid == 0){ // child // 0 1 0 0
 		shmem_access(pg_num);
-		running_ref_counts[pg_num]++;
-		if (shmem_count(pg_num) != running_ref_counts[pg_num] ){
+		if (shmem_count(pg_num) != 1 ){
 			print_test_result(0, name);
 		}
-		running_ref_counts[pg_num]--; // b/c we're exiting
 		/*int pid2 = fork();
 		if (pid2 == 0){ // child
 			
@@ -76,29 +47,31 @@ void ref_counts_after_process_exits(){
 		} else {
 			wait();
 		}*/
-		//~ printf(stdout, "exit child\n");
 		exit();
 	} else {
-		wait();
+		wait(); // let child go first
 		
-		if( shmem_count(pg_num) != running_ref_counts[pg_num]){ 
+		if( shmem_count(pg_num) != 0){ 
 			print_test_result(0, name);
 			return; 
 		}
-		print_test_result(1, name); 
+		print_test_result(1, name);
 	}
 }
 
 void two_processes_simultaneously__fork_is_irrelevant(){
+	// starting reference counts 0 0 0 0
+	// exit reference counts		0 0 0 1
 	char* name = "two_processes_simultaneously__fork_is_irrelevant";
 	char* test_str = "Ann\n";
 	int pg_num = 3;
 	int pid = fork();
 	if (pid == 0){ // child
 		sleep(200); // let parent go first
+		
+		
 		char* childs_shared_page = shmem_access(pg_num);
-		running_ref_counts[pg_num]++;
-		if( shmem_count(pg_num) != running_ref_counts[pg_num]){
+		if( shmem_count(pg_num) != 2){ // 0 0 0 2
 			print_test_result(0, name);
 			printf(stdout, "case 1\n");
 			return; 
@@ -109,33 +82,50 @@ void two_processes_simultaneously__fork_is_irrelevant(){
 			return; 
 		}
 		print_test_result(1, name); 
-		running_ref_counts[pg_num]--;
+		
 		exit();
 	} else { // parent
+		
 		char* parents_shared_page = shmem_access(pg_num);
-		running_ref_counts[pg_num]++;
 		strcpy(parents_shared_page, test_str);
+		
+		// before child is born
+		if( shmem_count(pg_num) != 1){ // 0 0 0 1
+			print_test_result(0, name);
+			return; 
+		}
+		
 		wait();
 	}
 }
 
 void process_gets_access_then_forks(){
+	// starting reference counts	0 0 0 1
+	// exit 						0 1 0 0 
 	char* name = "process_gets_access_then_forks";
 	char* test_str = "Bob\n";
 	int pg_num = 1; 
 	
-	
+	if( shmem_count(pg_num) != 0 ){
+			print_test_result(0, name);
+			printf(stdout, "ref count %d\n", shmem_count(pg_num));
+			return; 
+	}
 	char* shared_page = shmem_access(pg_num);
-	running_ref_counts[pg_num]++;
-	
-	int pid = fork();
-	running_ref_counts[pg_num]++;
+	// 0 1 0 0 
+	if( shmem_count(pg_num) != 1 ){
+			print_test_result(0, name);
+			printf(stdout, "ref count %d\n", shmem_count(pg_num));
+			return; 
+	}
+	int pid = fork(); 
 	
 	if (pid == 0){ // child
+		// 0 2 0 0
 		sleep(200); // let parent go first
-		if( shmem_count(pg_num) != running_ref_counts[pg_num] ){
+		if( shmem_count(pg_num) != 2 ){
 			print_test_result(0, name);
-			printf(stdout, "\tfirst case\n");
+			printf(stdout, "ref count %d\n", shmem_count(pg_num));
 			return; 
 		}
 		if (strcmp(shared_page, test_str) != 0){ 
@@ -144,7 +134,6 @@ void process_gets_access_then_forks(){
 		}
 		print_test_result(1, name); 
 		
-		running_ref_counts[pg_num]--;
 		exit();
 	} else { // parent
 		strcpy(shared_page, test_str);
@@ -172,12 +161,10 @@ main(int argc, char *argv[])
 	// 		process_gets_access_then_forks 
 	// ie 232 
 	// same bug for 131
-  printf(stdout, "Starting proj 2 tests\n");
-  //~ deref_null();
   
-	//~ ref_counts_after_process_exits();
-  two_processes_simultaneously__fork_is_irrelevant();
-  //~ process_gets_access_then_forks();
+	ref_counts_after_process_exits();
+    two_processes_simultaneously__fork_is_irrelevant();
+	process_gets_access_then_forks();
   
   exit();
 }

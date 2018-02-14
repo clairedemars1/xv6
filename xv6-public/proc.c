@@ -94,7 +94,7 @@ found:
   // initialize process's record of shared_pages
 	int i;
 	for(i=0; i<NSH; i++){
-		p-> shared_pages-> virtual_addr = 0;
+		p-> shared_pages[i].virtual_addr = 0;
 	}
 
   release(&ptable.lock);

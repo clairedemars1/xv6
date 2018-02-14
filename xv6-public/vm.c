@@ -305,6 +305,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 // returns 0 and sets out_page_num to NSH
 int is_shared_f(char* user_va, struct proc* process, int* out_page_num){
 	*out_page_num = NSH;
+	if (user_va == 0 ){ panic("0 virtual address"); }
 	struct sh_pg* shared_pages = process->shared_pages; 
 	int i;
 	for(i=0; i<NSH; i++){
@@ -354,7 +355,7 @@ freevm(pde_t *pgdir, struct proc* process)
 	} else { // is shared
 		
 		// free shared pages with reference count == 0
-		if (--(global_shared_pages[shared_page_index].reference_count) == 0 ){ // decrement ref count for any shared page
+		if ( (--(global_shared_pages[shared_page_index].reference_count)) == 0 ){ // decrement ref count for any shared page
 			pa = (uint) global_shared_pages[shared_page_index].phys_addr; // we could also get this from the pte
 			if (pa == 0)
 				panic("shared page kfree");
@@ -426,7 +427,6 @@ copyuvm(pde_t *parent_pgdir, uint sz, struct proc* child_proc)
 	void* va;
 	if( (va = shared_pages[j].virtual_addr) != 0){ // found a shared page
 		// copy it over to new process's pgdir
-		cprintf("trying to copy shared page %d\n", j); 
 		
 		// the page's physical address (in actual physical form)
 		pa = (uint) global_shared_pages[j].phys_addr; 
