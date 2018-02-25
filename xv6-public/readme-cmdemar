@@ -7,5 +7,4 @@ Due 3/6/2018
 Changes Made:
 	- sycall setup: user.h, syscall.h, syscall.c, sysproc.c, defs.h, proc.c
 	- syscall implementation: proc.c
-		- 
 

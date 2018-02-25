@@ -109,7 +109,8 @@ void sys_call_kernal_version(void){
 }
 
 int sys_clone(void){
-	void* fcn, *arg, *stack;
+	void (*fcn)(void*); 
+	void *arg, *stack;
 	if ( argptr(0, (char**) &fcn, sizeof(fcn) ) < 0 ){ //?
 		return -1;
 	}

@@ -26,6 +26,7 @@
 #include "stat.h"
 #include "user.h"
 #include "kthreads.h"
+#include "thread_lib.h"
 
 #define LOCKS_ON 1
 #define NULL 0

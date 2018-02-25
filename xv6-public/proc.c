@@ -585,7 +585,7 @@ void call_kernal_version(void){
 }
 
 
-int clone(void* fcn, void *arg, void*stack){
+int clone(void (*fcn) (void*), void *arg, void*stack){
 	return 42;
 }
 

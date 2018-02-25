@@ -1,6 +1,6 @@
 #include "types.h"
 #include "user.h"
-#include <stdint.h>
+//~ #include <stdint.h>
 
 int stdout = 1;
 //~ int running_ref_counts[4]; // stupid goober is not shared with child processes
