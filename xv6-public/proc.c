@@ -583,3 +583,12 @@ getprocsinfo(struct procinfo* info){
 void call_kernal_version(void){
 	cprintf("call_kernal_version was called\n");
 }
+
+
+int clone(void* fcn, void *arg, void*stack){
+	return 42;
+}
+
+int join(int pid){
+	return 42; 
+}

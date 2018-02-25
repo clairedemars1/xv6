@@ -107,3 +107,23 @@ void sys_call_kernal_version(void){
 	
 	call_kernal_version();
 }
+
+int sys_clone(void){
+	void* fcn, *arg, *stack;
+	if ( argptr(0, (char**) &fcn, sizeof(fcn) ) < 0 ){ //?
+		return -1;
+	}
+	if ( argptr(1, (char**) &arg, sizeof(arg) ) < 0 ){ //?
+		return -1;
+	}
+	if ( argptr(2, (char**) &stack, PGSIZE) < 0 ){
+		return -1;
+	}
+	return clone(fcn, arg, stack);
+}
+
+int sys_join(void){
+	int pid;
+	if ( argint(0, &pid) < 0) return 0;
+	return join(pid);
+}

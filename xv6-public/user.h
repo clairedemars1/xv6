@@ -28,6 +28,8 @@ int getprocsinfo(struct procinfo*);
 void* shmem_access(int page_number); // returns 0 on error
 int shmem_count(int page_number);
 void call_user_version(void); // experiment
+int clone(void* fcn, void *arg, void*stack); 
+int join(int pid);
 
 // ulib.c
 int stat(char*, struct stat*);

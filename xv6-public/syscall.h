@@ -24,3 +24,5 @@
 #define SYS_shmem_access 23 
 #define SYS_shmem_count 24 
 #define SYS_call_user_version 25 // experiment
+#define SYS_clone 26
+#define SYS_join 27

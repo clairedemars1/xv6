@@ -123,6 +123,8 @@ void            wakeup(void*);
 void            yield(void);
 int 			getprocsinfo(struct procinfo*);
 void			call_kernal_version(void);	
+int 			clone(void* fcn, void *arg, void*stack); 
+int 			join(int pid);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
