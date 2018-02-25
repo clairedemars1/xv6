@@ -25,7 +25,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int getprocsinfo(struct procinfo*);
-void* shmem_access(int page_number);
+void* shmem_access(int page_number); // returns 0 on error
 int shmem_count(int page_number);
 void call_user_version(void); // experiment
 

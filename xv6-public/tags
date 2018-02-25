@@ -76,6 +76,7 @@ Mzombie	zombie.c	/^main(void)$/
 N	forktest.c	8
 N	usertests.c	586
 NINODES	mkfs.c	18
+NSH	vm.c	415
 PCINT	lapic.c	35
 PERIODIC	lapic.c	34
 PIPE	sh.c	10
@@ -101,6 +102,8 @@ X1	lapic.c	33
 YEAR	lapic.c	172
 acquire	spinlock.c	/^acquire(struct spinlock *lk)$/
 acquiresleep	sleeplock.c	/^acquiresleep(struct sleeplock *lk)$/
+address_of_shared_page_for_cur_process	vm.c	/^void* address_of_shared_page_for_cur_process(int p/
+alloc	vm.c	422
 allocproc	proc.c	/^allocproc(void)$/
 allocuvm	vm.c	/^allocuvm(pde_t *pgdir, uint oldsz, uint newsz)$/
 argfd	sysfile.c	/^argfd(int n, int *pfd, struct file **pf)$/
@@ -170,6 +173,7 @@ crt	console.c	129
 data	ioapic.c	31
 data	pipe.c	15
 deallocuvm	vm.c	/^deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)$/
+deref_null	test.c	/^void deref_null(){$/
 dev	log.c	45
 devsw	file.c	13
 dirfile	usertests.c	/^dirfile(void)$/
@@ -177,6 +181,8 @@ dirlink	fs.c	/^dirlink(struct inode *dp, char *name, uint inum)$/
 dirlookup	fs.c	/^dirlookup(struct inode *dp, char *name, uint *poff/
 dirtest	usertests.c	/^void dirtest(void)$/
 disksize	memide.c	18
+do_alloc	vm.c	422
+do_not_alloc	vm.c	422
 e	console.c	186
 eargv	sh.c	23
 echoargv	usertests.c	13
@@ -287,8 +293,8 @@ kfree	kalloc.c	/^kfree(char *v)$/
 kill	proc.c	/^kill(int pid)$/
 kinit1	kalloc.c	/^kinit1(void *vstart, void *vend)$/
 kinit2	kalloc.c	/^kinit2(void *vstart, void *vend)$/
-kmap	vm.c	105
-kmap	vm.c	110
+kmap	vm.c	126
+kmap	vm.c	131
 kmem	kalloc.c	24
 kpgdir	vm.c	11
 kvmalloc	vm.c	/^kvmalloc(void)$/
@@ -379,9 +385,10 @@ parseline	sh.c	/^parseline(char **ps, char *es)$/
 parsepipe	sh.c	/^parsepipe(char **ps, char *es)$/
 parseredirs	sh.c	/^parseredirs(struct cmd *cmd, char **ps, char *es)$/
 peek	sh.c	/^peek(char **ps, char *es, char *toks)$/
-perm	vm.c	109
-phys_end	vm.c	108
-phys_start	vm.c	107
+perm	vm.c	130
+phy_addr	vm.c	418
+phys_end	vm.c	129
+phys_start	vm.c	128
 picinit	picirq.c	/^picinit(void)$/
 pinit	proc.c	/^pinit(void)$/
 pipe	pipe.c	13
@@ -416,6 +423,7 @@ readseg	bootmain.c	/^readseg(uchar* pa, uint count, uint offset)$/
 recover_from_log	log.c	/^recover_from_log(void)$/
 redircmd	sh.c	26
 redircmd	sh.c	/^redircmd(struct cmd *subcmd, char *file, char *efi/
+reference_count	vm.c	417
 reg	ioapic.c	29
 release	spinlock.c	/^release(struct spinlock *lk)$/
 releasesleep	sleeplock.c	/^releasesleep(struct sleeplock *lk)$/
@@ -435,7 +443,14 @@ sched	proc.c	/^sched(void)$/
 scheduler	proc.c	/^scheduler(void)$/
 seginit	vm.c	/^seginit(void)$/
 setupkvm	vm.c	/^setupkvm(void)$/
+sh_pg	vm.c	416
+sh_pg	vm.c	419
+share_memory_basic	test.c	/^void share_memory_basic(){ \/\/ fork before get page/
+share_memory_fork_after_get_page_access	test.c	/^void share_memory_fork_after_get_page_access(){$/
+share_memory_test1_write_and_read_from_same_process	test.c	/^void share_memory_test1_write_and_read_from_same_p/
+shared_pages	vm.c	420
 sharedfd	usertests.c	/^sharedfd(void)$/
+shmem_access	vm.c	/^void* shmem_access(int pg_num){$/
 size	log.c	42
 size	umalloc.c	14
 skipelem	fs.c	/^skipelem(char *path, char *name)$/
@@ -446,7 +461,7 @@ stat	mkfs.c	8
 stat	ulib.c	/^stat(char *n, struct stat *st)$/
 stati	fs.c	/^stati(struct inode *ip, struct stat *st)$/
 static_assert	mkfs.c	/^#define static_assert(a, b) do { switch (0) case 0/
-stdout	test.c	4
+stdout	test.c	5
 stdout	testgetprocsinfo.c	6
 stdout	usertests.c	14
 strchr	ulib.c	/^strchr(const char *s, char c)$/
@@ -479,6 +494,8 @@ sys_open	sysfile.c	/^sys_open(void)$/
 sys_pipe	sysfile.c	/^sys_pipe(void)$/
 sys_read	sysfile.c	/^sys_read(void)$/
 sys_sbrk	sysproc.c	/^sys_sbrk(void)$/
+sys_shmem_access	sysfile.c	/^void* sys_shmem_access(void){$/
+sys_shmem_count	sysfile.c	/^int sys_shmem_count(void){$/
 sys_sleep	sysproc.c	/^sys_sleep(void)$/
 sys_unlink	sysfile.c	/^sys_unlink(void)$/
 sys_uptime	sysproc.c	/^sys_uptime(void)$/
@@ -486,7 +503,6 @@ sys_wait	sysproc.c	/^sys_wait(void)$/
 sys_write	sysfile.c	/^sys_write(void)$/
 syscall	syscall.c	/^syscall(void)$/
 test	proc.c	/^void test(void){$/
-testmemproj2	test.c	/^void testmemproj2(){$/
 ticks	trap.c	15
 tickslock	trap.c	14
 trap	trap.c	/^trap(struct trapframe *tf)$/
@@ -506,11 +522,12 @@ uio	usertests.c	/^uio()$/
 uninit	usertests.c	1593
 unlinkread	usertests.c	/^unlinkread(void)$/
 use_lock	kalloc.c	22
+use_memory_not_in_page_table	test.c	/^void use_memory_not_in_page_table(){$/
 userinit	proc.c	/^userinit(void)$/
 uva2ka	vm.c	/^uva2ka(pde_t *pgdir, char *uva)$/
 validateint	usertests.c	/^validateint(int *p)$/
 validatetest	usertests.c	/^validatetest(void)$/
-virt	vm.c	106
+virt	vm.c	127
 w	console.c	185
 wait	proc.c	/^wait(void)$/
 waitdisk	bootmain.c	/^waitdisk(void)$/

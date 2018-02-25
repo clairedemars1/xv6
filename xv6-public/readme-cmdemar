@@ -2,57 +2,36 @@ Claire DeMars
 Advanced OS
 Project 2
 Due 2/13/2018
+1 day late
+
+Testing code: 
+	there are two executables
+		test_null_deref
+		test for the shared pages
 
 Changes Made:
+
 	Nullptr Exceptions
-	- Makefile: changed entry point for all user executables (-Ttext flag argument)
+	- Makefile: changed entry point for all user executables 
+	(-Ttext flag argument)
 	- exec.c (exec function) : added guard page at bottom of user memory
+	- syscall.c (argptr function) checked that the requested access 
+	address was not in the nullptr guard page
+	-test_null_deref.c
+	
 	Shared Pages
-	- syscall setup: syscall.h, syscall.c usys.S, user.h
-	- 
-
-
-
-
-Plan of attack:
-
-null ptr exceptions
-1. move code from page 0 to page 1, and check usertests still work
-	- userinit in proc.c (I changed a 0 address)
-	- Makefile: I changed 3 0s
-	- initcode.S: I changed a number in exec
-	- exec.c: I looked at exec function, which allocates the pages, but doesn't seem to hardcode any addresses (but couldn't find where readi was defined, or allocuvm)
-2. find code that generates an error for somethign similar to dereferencing null ptr 
-	- exec.c exec function, goto bad )
-3. find who handles the dereferencing of memory pointers
-	- walkpgdir() seems to be the function in charge of finding which page to go to, so it could check if the value it gets is 0, and throw the exception if nec
-4. make #3 generate an error 
-
-shared memory
-1. 
-
-hint
-tell other guy to sleep, write, other guy wakes and reads
-
-Notes:
-how does paging do protection? what replaces base and bound? Answer: if the first part of the address doesn't match an entry
-in the page table (see walkpgdir)
-
-	
-Questions
-Q1
-- exec.c
-a. what is ph.vaddr vs ph.memsize, are they redundant?
-b. exec checks if the binary requests an amount of memory (ph.vaddr)
-that is a multiple of the page size, and if not, it exits, but how would the binary know what page size you use?
- I guess the compiler asks the OS when it makes the binary?
- Q2
- - base and bounds are checked by hardware (at least for user code), so why does the argptr function
- check them? the argptr function is kernal, but why wouldn't the kernal just use the existing machinery, and load it's own bounds limit
- into tohe bounds register? well, for one, b/c their is no base and bounds, it's become the page table now (which only the kernal can edit)
-Q3
-tags in .gitignore file is not working, why?
-
-	
-	
+	- syscall setup - syscall.h, syscall.c usys.S, user.h
+	- params.h defined number of shared pages allowed (NSH)
+	- proc.h: made global_shared_pages[NSH] (which holds all reference counts and the physical address of the page (the pa is also in
+	 the ptes)
+	- vm.c: Made process-specific shared_pages[NSH] in proc struct, holding virtual address of any shared pages for that process 
+	- proc.c:  (allocproc function) initialized process's shared_pages
+	- defs.h and proc.c added a param to copyuvm so it took a pointer to the new proc, 
+	so could let the new proc know it had shared pages, if applicable
+	- vm.c freevm, changed it so it decremented ref counts and only freed the shared pages if their reference counts were 0.
+		copyuvm, copied over shared page info to the new process and incremented reference counts
+		shmem_access and shmem_count implementations, and their helper functions
+		they handle bad arguments, and if there is no vm for shared pages b/c the heap is too big
+		(e.g. line 515)
+	- test.c: test code
 

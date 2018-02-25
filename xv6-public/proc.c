@@ -10,7 +10,7 @@
 
 struct {
   struct spinlock lock;
-  struct proc proc[NPROC];
+  struct proc proc[NPROC]; // actually procs plural
 } ptable;
 
 static struct proc *initproc;
@@ -74,6 +74,7 @@ myproc(void) {
 static struct proc*
 allocproc(void)
 {
+	// It checked it's called for each proc, even forked ones
   struct proc *p;
   char *sp;
 
@@ -89,6 +90,12 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  
+  // initialize process's record of shared_pages
+	int i;
+	for(i=0; i<NSH; i++){
+		p-> shared_pages[i].virtual_addr = 0;
+	}
 
   release(&ptable.lock);
 
@@ -191,7 +198,7 @@ fork(void)
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
@@ -228,6 +235,9 @@ fork(void)
 void
 exit(void)
 {
+	// exit is not called at the death of every process 
+	// (see init.c where we learn that most processes are ended by a wait call)
+  
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
@@ -261,7 +271,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
-
+  
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -285,12 +295,13 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
+      //~ cprintf("\tfound a kid to clean up\n");
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+        freevm(p->pgdir, p);
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
