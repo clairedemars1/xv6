@@ -74,7 +74,7 @@ myproc(void) {
 static struct proc*
 allocproc(void)
 {
-	// It checked it's called for each proc, even forked ones
+	// I checked it's called for each proc, even forked ones
   struct proc *p;
   char *sp;
 
@@ -122,6 +122,66 @@ found:
 
   return p;
 }
+
+
+/*
+static struct proc*
+allocthread(void)
+{
+  struct proc *p;
+  struct proc *old_proc = myproc();
+  char *sp;
+
+  acquire(&ptable.lock);
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if(p->state == UNUSED)
+      goto found;
+
+  release(&ptable.lock);
+  return 0;
+
+found:
+  p->state = EMBRYO;
+  p->pid = nextpid++;
+  
+  // initialize process's record of shared_pages
+	int i;
+	for(i=0; i<NSH; i++){
+		p-> shared_pages = old_proc -> shared_pages; //@claire, ok?
+	}
+
+  release(&ptable.lock);
+
+//?????
+
+  // kernal stack is given
+  // Allocate kernel stack.
+  if((p->kstack = kalloc()) == 0){
+    p->state = UNUSED;
+    return 0;
+  }
+  sp = p->kstack + KSTACKSIZE;
+
+  // Leave room for trap frame.
+  sp -= sizeof *p->tf;
+  p->tf = (struct trapframe*)sp;
+
+  // Set up new context to start executing at forkret,
+  // which returns to trapret.
+  sp -= 4;
+  *(uint*)sp = (uint)trapret;
+
+  sp -= sizeof *p->context;
+  p->context = (struct context*)sp;
+  memset(p->context, 0, sizeof *p->context);
+  p->context->eip = (uint)forkret;
+  * 
+  
+
+  return p;
+}
+*/
 
 //PAGEBREAK: 32
 // Set up first user process.
@@ -585,10 +645,57 @@ void call_kernal_version(void){
 }
 
 
-int clone(void (*fcn) (void*), void *arg, void*stack){
-	return 42;
+int clone(void (*fcn) (void*), void *arg, void*stack){/*
+	// based on fork
+	// basically, make a new process, but sharing the pgdir of the calling process
+	// and using the passed stack
+	// what do with arg?
+	// return the new pid of that thing
+	
+	int i, pid;
+	struct proc *np;
+	//~ struct proc *curproc = myproc();
+
+	// Allocate process.
+	if((np = allocproc()) == 0){
+		return -1;
+	}
+
+	// Copy process state from proc.
+	//~ if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
+	//~ kfree(np->kstack);
+	//~ np->kstack = 0;
+	//~ np->state = UNUSED;
+	//~ return -1;
+	//~ }
+	//~ np->sz = curproc->sz;
+	//~ np->parent = curproc;
+	//~ *np->tf = *curproc->tf;
+
+	// Clear %eax so that fork returns 0 in the child.
+	np->tf->eax = 0;
+
+	//~ for(i = 0; i < NOFILE; i++)
+	//~ if(curproc->ofile[i])
+	  //~ np->ofile[i] = filedup(curproc->ofile[i]);
+	//~ np->cwd = idup(curproc->cwd);
+
+	//~ safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+	pid = np->pid;
+
+	acquire(&ptable.lock);
+
+	np->state = RUNNABLE;
+
+	release(&ptable.lock);
+
+	return pid;
+	*/
+	return 42; 
 }
 
 int join(int pid){
+	// return 0 for success, -1 for failure
 	return 42; 
 }

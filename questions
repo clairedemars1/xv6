@@ -1,0 +1,34 @@
+
+Q5: context switch info
+PCB is the proc struct, right?
+Threads need that, so need proc.
+slide 30, ppt 1.16: on context switch, it stores registers relevant to execution state in both PCB (for the processor?) and process A’s kernal stack (for the process itself?). How not redundant?
+Possible explanations:
+Is the saving to kstack A only "hey hold this for a second" temporary?
+Are they different regs?
+Follow-up: why thread have own kernal stack?
+
+Q7: 
+what if they fork the calling process?
+duplicate everything? b/c I made shallow copies to make the thread (e.g. setting p->shared_pages = old_proc-> shared_pages)
+
+Q6:
+ok to have undefined behavior if parent (do threads have parents) does not call join?
+b/c I have shallow copies
+
+Q8!!!!
+I not think user should allocate kernal stack!
+just let kernal do it, like in allocproc! (more consistent, already implemented)
+
+Q9!!!
+order of arguments in code docs (p.34) is reverse of what ground up says (p. 54 "pushes all of the parameters for the
+function onto the stack in the reverse order that they are documented")
+No wait, the diagram contradicts itself (see notes on the side)
+ASK EXPLAIN DIAGRAM
+
+Q1: why doesn't calling the function work? (from within sys_clone, I try to call the function pointer)
+
+Q2: why doesn't git ignore work on the tags?
+
+Q4: scheduler presumably put processes on cpus randomly, so any threads I create could end up on the same cpu, 
+that's ok, right?

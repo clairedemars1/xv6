@@ -114,6 +114,9 @@ int sys_clone(void){
 	if ( argptr(0, (char**) &fcn, sizeof(fcn) ) < 0 ){ //?
 		return -1;
 	}
+	cprintf("about to call read_me\n");
+	(*fcn)(0); // not getting called
+	
 	if ( argptr(1, (char**) &arg, sizeof(arg) ) < 0 ){ //?
 		return -1;
 	}
