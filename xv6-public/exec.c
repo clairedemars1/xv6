@@ -78,7 +78,7 @@ exec(char *path, char **argv)
     if(argc >= MAXARG)
       goto bad;
     // move back into the stack
-    // plunk in arguments, starting at high memory (ie the stack bottom) (so in the order they are declared!, unlike what book says!)
+    // plunk in arguments, starting at high memory (ie the stack bottom) (so in the order they are declared)
     sp = (sp - (strlen(argv[argc]) + 1)) & ~3; 
     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
       goto bad;

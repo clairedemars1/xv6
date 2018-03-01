@@ -347,19 +347,19 @@ wait(void)
   
   acquire(&ptable.lock);
   for(;;){
-    // Scan through table looking for exited children.
+    // Scan through table looking for exited children. Process repeats until have found one (intersperced with sleep)
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->parent != curproc)
-        continue;
+        continue; 
       havekids = 1;
       //~ cprintf("\tfound a kid to clean up\n");
-      if(p->state == ZOMBIE){
+      if(p->state == ZOMBIE){ // so a bad zombie is one with a dead parent
         // Found one.
         pid = p->pid;
-        kfree(p->kstack);
+        kfree(p->kstack); // freeing memory
         p->kstack = 0;
-        freevm(p->pgdir, p);
+        freevm(p->pgdir, p); // freeing memory
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;

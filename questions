@@ -1,17 +1,26 @@
 
 Q: 
-why aren't we doing stuff with the context during fork
-why only touching the trapframe?
-don't we need all the stored registers? 
+questions from project desc
+
+Q:
+exec line 81
+order of arguments
 
 Q:
 why is eax being set to 0 in fork?
 online said it was an arithmetic register
 proc.c fork
 proc.c clone
+I think thread's should have as their parent the maker thread's parent, not the maker thread
+tyler says no
 
 Q: 
-questions from project desc
+can you explain init.c again?
+
+Q: 
+why aren't we doing stuff with the context during fork
+why only touching the trapframe?
+don't we need all the stored registers? 
 
 Q:
 follow-up about email
@@ -33,7 +42,20 @@ trapframe and context both hold registers
 trapframe has all the registers, context just has some of them
 A2:
 store them on the stack, point to them from the proc
+A3:
+all traps go to alltraps (trapasm.S)
+build trapframe to store info about user, call trap()
+yield (
 
+context switch: switchuvm switches page tables (user memory)
+context is kernal "context"
+trapframe is user "context"
+
+Note: there is implicit context switch going on when switch from user thread to kernal thread within same process (we see with the 
+loading of registers from the trap vector)
+how does swtch.S know where the stack pointer is? it was passed it, the context is saved at the top of the stack, so the context is sp
+
+*** it's different register values: those of user par tof B vs those of kernal part of B
 
 Q11: existing kthread does not have a stack or proc, why should the new kthread have them?
 You're talking about kernal threads, not k threads.

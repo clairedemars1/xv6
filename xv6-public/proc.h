@@ -60,6 +60,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   struct sh_pg shared_pages[NSH]; // info on the shared pages the process has access to
 									// index indicates page number (0 to NSH-1)
+  int is_original_thread; 			// wait() waits specifically for the original thread to exit, .e. it does not return when it finds an exited non-original thread
 };
 
 
