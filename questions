@@ -1,4 +1,10 @@
 
+Q: 
+why aren't we doing stuff with the context during fork
+why only touching the trapframe?
+don't we need all the stored registers? 
+
+
 Q5: context switch info
 PCB is the proc struct, right?
 Threads need that, so need proc.
@@ -7,18 +13,41 @@ Possible explanations:
 Is the saving to kstack A only "hey hold this for a second" temporary?
 Are they different regs?
 Follow-up: why thread have own kernal stack?
+A1: 
+the ones pushed to k-stack(A) are the trapframe, then trap handler (trap() points the proc to the trapframe 
+trapasm
+Note: the place it stores those registers is in a trapframe struct 
+trapframe and context both hold registers
+trapframe has all the registers, context just has some of them
+A2:
+store them on the stack, point to them from the proc
+
+
+Q11: existing kthread does not have a stack or proc, why should the new kthread have them?
+You're talking about kernal threads, not k threads.
+Plus it's a different use of term "thread" just a way of saying moving to kernal mode
+
+apic - interrupt controller
 
 Q7: 
 what if they fork the calling process?
 duplicate everything? b/c I made shallow copies to make the thread (e.g. setting p->shared_pages = old_proc-> shared_pages)
+A: 
+why would you want to make threads and then fork? 
+Don't break forking or anything, but probs don't worry about it.
+Behavior is undefined, so grading will probably not have test case. 
+I will bet that test code/grading not deals with this. 
 
 Q6:
 ok to have undefined behavior if parent (do threads have parents) does not call join?
 b/c I have shallow copies
+A: yes
 
-Q8!!!!
+Q8
 I not think user should allocate kernal stack!
 just let kernal do it, like in allocproc! (more consistent, already implemented)
+A: 
+user is allocating the user stack, silly 
 
 Q9!!!
 order of arguments in code docs (p.34) is reverse of what ground up says (p. 54 "pushes all of the parameters for the
@@ -27,8 +56,12 @@ No wait, the diagram contradicts itself (see notes on the side)
 ASK EXPLAIN DIAGRAM
 
 Q1: why doesn't calling the function work? (from within sys_clone, I try to call the function pointer)
+A: b/c it's in user space, but in my test i tried to call it from kernal space
+how will that not be a problem in the real test?
+b/c the real test does not call it from kernal space, rather just saves it's info to call later
 
 Q2: why doesn't git ignore work on the tags?
 
 Q4: scheduler presumably put processes on cpus randomly, so any threads I create could end up on the same cpu, 
 that's ok, right?
+A: yeah

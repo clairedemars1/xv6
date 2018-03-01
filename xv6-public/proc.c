@@ -128,12 +128,15 @@ found:
 static struct proc*
 allocthread(void)
 {
+	// only shared page stuff is different from allocproc
+	
   struct proc *p;
   struct proc *old_proc = myproc();
   char *sp;
 
   acquire(&ptable.lock);
 
+  // get a proc struct
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
@@ -153,9 +156,6 @@ found:
 
   release(&ptable.lock);
 
-//?????
-
-  // kernal stack is given
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
@@ -176,12 +176,10 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-  * 
-  
-
   return p;
 }
-*/
+* */
+
 
 //PAGEBREAK: 32
 // Set up first user process.
@@ -645,7 +643,9 @@ void call_kernal_version(void){
 }
 
 
-int clone(void (*fcn) (void*), void *arg, void*stack){/*
+int clone(void (*fcn) (void*), void *arg, void*stack){
+	// make a thread
+	
 	// based on fork
 	// basically, make a new process, but sharing the pgdir of the calling process
 	// and using the passed stack
@@ -654,7 +654,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){/*
 	
 	int i, pid;
 	struct proc *np;
-	//~ struct proc *curproc = myproc();
+	struct proc *curproc = myproc();
 
 	// Allocate process.
 	if((np = allocproc()) == 0){
@@ -663,24 +663,36 @@ int clone(void (*fcn) (void*), void *arg, void*stack){/*
 
 	// Copy process state from proc.
 	//~ if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
-	//~ kfree(np->kstack);
-	//~ np->kstack = 0;
-	//~ np->state = UNUSED;
-	//~ return -1;
+		//~ kfree(np->kstack);
+		//~ np->kstack = 0;
+		//~ np->state = UNUSED;
+		//~ return -1;
 	//~ }
-	//~ np->sz = curproc->sz;
-	//~ np->parent = curproc;
-	//~ *np->tf = *curproc->tf;
+	np->pgdir = curproc->pgdir; // shallow copy page directory (to use the same one)
+	np->sz = curproc->sz;
+	//?
+	np->parent = curproc; //?
+	
+	*np->tf = *curproc->tf; // same as? 
+	curproc->tf->esp = (uint) stack;  // added (based on exec) // tell them to use the given user stack instead
 
-	// Clear %eax so that fork returns 0 in the child.
-	np->tf->eax = 0;
+	//shared memory info
+	for (i=0; i< NSH; i++){
+		np->shared_pages[i] = curproc->shared_pages[i];
+	}
 
-	//~ for(i = 0; i < NOFILE; i++)
-	//~ if(curproc->ofile[i])
-	  //~ np->ofile[i] = filedup(curproc->ofile[i]);
-	//~ np->cwd = idup(curproc->cwd);
+	//?
+	// Clear %eax so that fork returns 0 in the child thread.
+	np->tf->eax = 0; //?
+
+	//?
+	for(i = 0; i < NOFILE; i++)
+	if(curproc->ofile[i])
+	  np->ofile[i] = filedup(curproc->ofile[i]);
+	np->cwd = idup(curproc->cwd);
 
 	//~ safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+	safestrcpy(np->name, "thread", sizeof("thread"));
 
 	pid = np->pid;
 
@@ -691,8 +703,6 @@ int clone(void (*fcn) (void*), void *arg, void*stack){/*
 	release(&ptable.lock);
 
 	return pid;
-	*/
-	return 42; 
 }
 
 int join(int pid){

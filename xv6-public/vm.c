@@ -303,6 +303,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 //  if user_va represents a shared page for the process, returns 1 
 // and sets out_page_num to the page's identifier
 // returns 0 and sets out_page_num to NSH
+// "_f" for function, to differentiate it from the variable of similar name
 int is_shared_f(char* user_va, struct proc* process, int* out_page_num){
 	*out_page_num = NSH;
 	if (user_va == 0 ){ panic("0 virtual address"); }

@@ -71,16 +71,18 @@ exec(char *path, char **argv)
   if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
     goto bad;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
-  sp = sz;
+  sp = sz; // we are now above the the stack(claire)
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
-    sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
+    // move back into the stack
+    // plunk in arguments, starting at high memory (ie the stack bottom) (so in the order they are declared!, unlike what book says!)
+    sp = (sp - (strlen(argv[argc]) + 1)) & ~3; 
     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
       goto bad;
-    ustack[3+argc] = sp;
+    ustack[3+argc] = sp; // ustack is a local array, a temporary holding place for info
   }
   ustack[3+argc] = 0;
 
@@ -89,7 +91,7 @@ exec(char *path, char **argv)
   ustack[2] = sp - (argc+1)*4;  // argv pointer
 
   sp -= (3+argc+1) * 4;
-  if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0)
+  if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0) // try to copy the ustack
     goto bad;
 
   // Save program name for debugging.
@@ -103,7 +105,7 @@ exec(char *path, char **argv)
   curproc->pgdir = pgdir;
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
-  curproc->tf->esp = sp;
+  curproc->tf->esp = sp; // current place in the stack
   
   switchuvm(curproc);
   

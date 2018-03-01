@@ -4,9 +4,9 @@ typedef struct kthread_t {
     
 } kthread_t;
 
-thread_create(void* fcn_name, kthread_t* 
-lock_aquire
-lock_release
+//~ thread_create(void* fcn_name, kthread_t* 
+//~ lock_aquire
+//~ lock_release
 //~ init_lock(&lock)?
 
 void func ( void (*f)(int) );
