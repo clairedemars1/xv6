@@ -4,6 +4,18 @@ why aren't we doing stuff with the context during fork
 why only touching the trapframe?
 don't we need all the stored registers? 
 
+Q:
+why is eax being set to 0 in fork?
+online said it was an arithmetic register
+proc.c fork
+proc.c clone
+
+Q: 
+questions from project desc
+
+Q:
+follow-up about email
+How does that explain apparent redundancy on loading (ppt 1.16 slide 30+)
 
 Q5: context switch info
 PCB is the proc struct, right?

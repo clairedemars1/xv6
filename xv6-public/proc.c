@@ -648,9 +648,10 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	
 	// based on fork
 	// basically, make a new process, but sharing the pgdir of the calling process
-	// and using the passed stack
-	// what do with arg?
-	// return the new pid of that thing
+	// and using the passed user stack
+	// with execution as if it had just called the function fcn with the arg arg
+	
+	// todo: copy over the argument into the stack, set things up so its like the function has just started running
 	
 	int i, pid;
 	struct proc *np;
@@ -668,12 +669,11 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 		//~ np->state = UNUSED;
 		//~ return -1;
 	//~ }
-	np->pgdir = curproc->pgdir; // shallow copy page directory (to use the same one)
-	np->sz = curproc->sz;
-	//?
+	np->pgdir = curproc->pgdir; // use the same pgdir, don't make a copy of it
+	np->sz = curproc->sz; //? ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc; //?
 	
-	*np->tf = *curproc->tf; // same as? 
+	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
 	curproc->tf->esp = (uint) stack;  // added (based on exec) // tell them to use the given user stack instead
 
 	//shared memory info
