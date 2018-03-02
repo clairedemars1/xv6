@@ -104,34 +104,40 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  sp = p->kstack + KSTACKSIZE;
+  sp = p->kstack + KSTACKSIZE; // go to the bottom of the stack
 
   // Leave room for trap frame.
-  sp -= sizeof *p->tf;
-  p->tf = (struct trapframe*)sp;
+  sp -= sizeof *p->tf; // move down, past a trapframe sized chunk
+  p->tf = (struct trapframe*)sp; // tell the new proc that it's trapframe is in the chunk just passed
 
   // Set up new context to start executing at forkret,
   // which returns to trapret.
   sp -= 4;
-  *(uint*)sp = (uint)trapret;
+  *(uint*)sp = (uint)trapret; // put the function trapret's memory address at the next spot in the stack
 
-  sp -= sizeof *p->context;
+  sp -= sizeof *p->context; // ie *(p->context);  // move down, past a chunk the size of a context struct
   p->context = (struct context*)sp;
-  memset(p->context, 0, sizeof *p->context);
-  p->context->eip = (uint)forkret;
-
+  memset(p->context, 0, sizeof *p->context); // zero out the context
+  p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
   return p;
+  
+  // summary, we set up directions to 2 functions
+  // trapret (in the stack pointer of the trapframe), presumably for the user thread
+  // forkret (in the instruction pointer of the context), presumably for the kernal thread
 }
 
-
-/*
 static struct proc*
+//~ allocthread(void (*function_to_run) (void*)  )
 allocthread(void)
 {
-	// only shared page stuff is different from allocproc
+	// only differences from allocproc: 
+		// 
+		// goes to teh function instead of trapret
 	
+	
+	//~ cprintf("function to run is : %p\n", function_to_run);
   struct proc *p;
-  struct proc *old_proc = myproc();
+  //~ struct proc *old_proc = myproc();
   char *sp;
 
   acquire(&ptable.lock);
@@ -151,7 +157,7 @@ found:
   // initialize process's record of shared_pages
 	int i;
 	for(i=0; i<NSH; i++){
-		p-> shared_pages = old_proc -> shared_pages; //@claire, ok?
+		p-> shared_pages[i].virtual_addr = 0;
 	}
 
   release(&ptable.lock);
@@ -161,24 +167,28 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  sp = p->kstack + KSTACKSIZE;
+  sp = p->kstack + KSTACKSIZE; // go to the bottom of the stack
 
   // Leave room for trap frame.
-  sp -= sizeof *p->tf;
-  p->tf = (struct trapframe*)sp;
+  sp -= sizeof *p->tf; 
+  p->tf = (struct trapframe*)sp; 
 
   // Set up new context to start executing at forkret,
   // which returns to trapret.
   sp -= 4;
-  *(uint*)sp = (uint)trapret;
+  //~ *(uint*)sp = (uint)trapret; // put the function trapret's memory address at the next spot in the stack
+  *(uint*)sp = (uint)trapret; 
 
-  sp -= sizeof *p->context;
+  sp -= sizeof *p->context; // ie *(p->context);  // move down, past a chunk the size of a context struct
   p->context = (struct context*)sp;
-  memset(p->context, 0, sizeof *p->context);
-  p->context->eip = (uint)forkret;
+  memset(p->context, 0, sizeof *p->context); // zero out the context (this is not the zero causing the nullptr error)
+  p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
   return p;
+  
+  // summary, we set up directions to 2 functions
+  // trapret (in between the trapframe and the context), presumably for the user thread
+  // forkret (in the instruction pointer of the context), presumably for the kernal thread
 }
-* */
 
 
 //PAGEBREAK: 32
@@ -658,23 +668,20 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	struct proc *curproc = myproc();
 
 	// Allocate process.
-	if((np = allocproc()) == 0){
+	if((np = allocthread()) == 0){
 		return -1;
 	}
 
-	// Copy process state from proc.
-	//~ if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
-		//~ kfree(np->kstack);
-		//~ np->kstack = 0;
-		//~ np->state = UNUSED;
-		//~ return -1;
-	//~ }
-	np->pgdir = curproc->pgdir; // use the same pgdir, don't make a copy of it
+	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
 	np->sz = curproc->sz; //? ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc; //?
 	
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
-	curproc->tf->esp = (uint) stack;  // added (based on exec) // tell them to use the given user stack instead
+	cprintf("setting stack which is %p\n", stack);
+
+	curproc->tf->esp = kk(uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
+	cprintf("seting eip to fcn which is %p\n", fcn);
+	curproc->tf->eip = (uint) fcn;  // ADDED
 
 	//shared memory info
 	for (i=0; i< NSH; i++){
@@ -682,8 +689,9 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	}
 
 	//?
-	// Clear %eax so that fork returns 0 in the child thread.
-	np->tf->eax = 0; //?
+	// Clear %eax so that fork returns 0 in the child.
+	np->tf->eax = 0; //? // either don't need or set to pid
+	//~ np->tf->eax = np->pid; 
 
 	//?
 	for(i = 0; i < NOFILE; i++)

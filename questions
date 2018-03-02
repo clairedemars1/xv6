@@ -1,4 +1,8 @@
 
+Q:
+how does fork work
+specifically, how does part of it return the pid and the other part just pull the zero out of the trapframe?
+
 Q: 
 questions from project desc
 

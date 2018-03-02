@@ -28,7 +28,7 @@
 #include "kthreads.h"
 #include "thread_lib.h"
 
-#define LOCKS_ON 1
+#define LOCKS_ON 0
 #define NULL 0
 
 
@@ -40,6 +40,7 @@ int things_made = 0;
 #define MAX_CONSUME 3000000
 void consumer(void* arg)
 {
+	printf(1, "consumer got called\n");
     int i;
     int consumed = 0;
     // dumb little busy sleep
@@ -135,7 +136,23 @@ void orig_test(){
    
 }
 
+void foo(void* arg){
+	//~ printf(1, "foo ran\n with arg %d\n", *(int*)arg);
+	//~ printf(1, "foo ran\n with arg %d\n", *(int*)arg);
+}
+
+void simple_test(){
+    init_lock(&lock);
+    int i = 3;
+    //~ kthread_t thread = thread_create(foo, &i);
+    thread_create(foo, &i);
+    //~ printf(1, "pid: %d\n", thread.pid);
+}
+
 int main(void)
 {
+	printf(1, "starting test\n");
+	simple_test();
+	//~ orig_test();
     exit();
 }
