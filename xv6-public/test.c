@@ -98,9 +98,8 @@ void producer(void* arg)
     exit();
 }
 
-int main(void)
-{
-    int i;
+void orig_test(){
+	int i;
     init_lock(&lock);
     int indices[NUM_CONS];
     kthread_t producers[NUM_PROD];
@@ -133,5 +132,10 @@ int main(void)
     {
         printf(1, "Test passed!\n");
     }
+   
+}
+
+int main(void)
+{
     exit();
 }
