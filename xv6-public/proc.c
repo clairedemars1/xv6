@@ -119,6 +119,8 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context); // zero out the context
   p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
+  
+  p->is_thread = 0; //NEW
   return p;
   
   // summary, we set up directions to 2 functions
@@ -132,7 +134,8 @@ allocthread(void)
 {
 	// only differences from allocproc: 
 		// 
-		// goes to teh function instead of trapret
+		// goes to th function instead of trapret
+		// value of p->is_thread;
 	
 	
 	//~ cprintf("function to run is : %p\n", function_to_run);
@@ -183,6 +186,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context); // zero out the context (this is not the zero causing the nullptr error)
   p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
+  p->is_thread = 1; //NEW
   return p;
   
   // summary, we set up directions to 2 functions
@@ -264,7 +268,7 @@ fork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
-
+  
   // Copy process state from proc.
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
     kfree(np->kstack);
@@ -351,6 +355,7 @@ exit(void)
 int
 wait(void)
 {
+  //~ cprintf("inside wait\n");
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
@@ -364,7 +369,7 @@ wait(void)
         continue; 
       havekids = 1;
       //~ cprintf("\tfound a kid to clean up\n");
-      if(p->state == ZOMBIE){ // so a bad zombie is one with a dead parent
+      if(p->state == ZOMBIE && !(p->is_thread) ){ // so a bad zombie is one with a dead parent
         // Found one.
         pid = p->pid;
         kfree(p->kstack); // freeing memory
@@ -653,6 +658,11 @@ void call_kernal_version(void){
 }
 
 
+//~ int clone(void (*fcn) (void*), void *arg, void*stack){
+	//~ return fork();
+//~ }
+
+
 int clone(void (*fcn) (void*), void *arg, void*stack){
 	// make a thread
 	
@@ -671,17 +681,25 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	if((np = allocthread()) == 0){
 		return -1;
 	}
+	cprintf("before the copying of pgdir\n");
 
+	//~ if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
+		//~ kfree(np->kstack);
+		//~ np->kstack = 0;
+		//~ np->state = UNUSED;
+		//~ return -1;
+	  //~ }
 	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
+	cprintf("after the copying of pgdir\n");
 	np->sz = curproc->sz; //? ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc; //?
 	
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
-	cprintf("setting stack which is %p\n", stack);
+	//~ cprintf("setting stack which is %p\n", stack);
 
-	curproc->tf->esp = kk(uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
-	cprintf("seting eip to fcn which is %p\n", fcn);
-	curproc->tf->eip = (uint) fcn;  // ADDED
+	//~ curproc->tf->esp = (uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
+	//~ cprintf("seting eip to fcn which is %p\n", fcn);
+	//~ curproc->tf->eip = (uint) fcn;  // ADDED
 
 	//shared memory info
 	for (i=0; i< NSH; i++){

@@ -154,5 +154,6 @@ int main(void)
 	printf(1, "starting test\n");
 	simple_test();
 	//~ orig_test();
+	printf(1, "about to exit\n");
     exit();
 }
