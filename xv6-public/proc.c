@@ -681,25 +681,27 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	if((np = allocthread()) == 0){
 		return -1;
 	}
-	cprintf("before the copying of pgdir\n");
 
-	//~ if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
-		//~ kfree(np->kstack);
-		//~ np->kstack = 0;
-		//~ np->state = UNUSED;
-		//~ return -1;
-	  //~ }
 	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
-	cprintf("after the copying of pgdir\n");
 	np->sz = curproc->sz; //? ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc; //?
 	
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
 	//~ cprintf("setting stack which is %p\n", stack);
 
-	//~ curproc->tf->esp = (uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
+	
+	
 	//~ cprintf("seting eip to fcn which is %p\n", fcn);
-	//~ curproc->tf->eip = (uint) fcn;  // ADDED
+	np->tf->eip = (uint) fcn;  // ADDED
+	
+	// put arg and return address into the stack (based on exec)
+	// stack points to the bottom of the stack (high memory end)
+	stack -= 4;
+	*( (void**) stack) = arg;
+	stack -= 4;
+	*( (int*) stack) = 0xffffffff; 
+	np->tf->esp = (uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
+	// causes it to print lllllll
 
 	//shared memory info
 	for (i=0; i< NSH; i++){
@@ -708,7 +710,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 
 	//?
 	// Clear %eax so that fork returns 0 in the child.
-	np->tf->eax = 0; //? // either don't need or set to pid
+	//~ np->tf->eax = 0; //? // either don't need or set to pid
 	//~ np->tf->eax = np->pid; 
 
 	//?

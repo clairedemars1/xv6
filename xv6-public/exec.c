@@ -105,7 +105,7 @@ exec(char *path, char **argv)
   curproc->pgdir = pgdir;
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
-  curproc->tf->esp = sp; // current place in the stack
+  curproc->tf->esp = sp; // current place in the stack, below all the args and return address
   
   switchuvm(curproc);
   
