@@ -1,4 +1,5 @@
 #include "user.h"
+#include "x86.h"
 
 typedef struct kthread_t { 
     int pid;
@@ -6,7 +7,7 @@ typedef struct kthread_t {
 } kthread_t;
 
 typedef struct lock_t {
-	// can just be a mutex
+	uint flag;
 } lock_t;
 
 
@@ -42,13 +43,14 @@ void thread_join(kthread_t thread){
 }
 
 void init_lock(lock_t* lock){
-	
+	lock->flag = 0;
 }
 
 void lock_acquire(lock_t* lock){
-	
+	while( xchg( &(lock->flag), 1) == 1)
+		;
 }
 
 void lock_release(lock_t* lock){
-	
+	lock->flag = 0;
 }

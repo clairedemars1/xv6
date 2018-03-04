@@ -29,7 +29,7 @@
 #include "thread_lib.h"
 #include "procinfo.h"
 
-#define LOCKS_ON 0
+#define LOCKS_ON 1
 #define NULL 0
 
 
@@ -51,7 +51,7 @@ int things_made = 0;
 #define MAX_CONSUME 3000000
 void consumer(void* arg)
 {
-	printf(1, "consumer got called\n");
+	//~ printf(1, "consumer got called\n");
     int i;
     int consumed = 0;
     // dumb little busy sleep
@@ -147,27 +147,40 @@ void orig_test(){
    
 }
 
-void foo(void* arg){
-	printf(1, "\tFOO RAN WITH ARG %d\n", *(int*)arg); 
+void bar(void* arg){
+	printf(1, "\t bar ran with arg %d\n", *(int*)arg); 
+	sleep(300);
 	exit();
 }
 
-void simple_test(){
+void when_main_process_calls_join_it_actually_waits(){
     int i = 3;
+    kthread_t thread = thread_create(bar, &i);
+    // sleep(300); // necessary before join worked, to prevent lllll 
+    thread_join(thread);
+    printf(1, "\tshould not print until bar is done\n");
+}
+
+void foo(void* arg){
+	printf(1, "\tfoo ran with arg %d\n", *(int*)arg); 
+	exit();
+}
+
+void join_cleans_up_procs(){
+	int i = 3;
     kthread_t thread = thread_create(foo, &i);
-    printf(1, "\tthread pid: %d\n", thread.pid);
-    //~ sleep(300); // fixed the lll 
     print_procs();
     thread_join(thread);
+    print_procs();
 }
 
 
 int main(void)
 {
 	printf(1, "starting test\n");
-	//~ simple_test();
+	//~ join_cleans_up_procs();
+	//~ when_main_process_calls_join_it_actually_waits();
 	orig_test();
-	print_procs();
 	printf(1, "about to exit test process\n");
     exit();
 }
