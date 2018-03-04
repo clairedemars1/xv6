@@ -33,6 +33,16 @@
 #define NULL 0
 
 
+
+void print_procs(){
+	struct procinfo procs[64];
+	int proc_count = getprocsinfo(procs);
+	int i;
+	for (i=0; i<proc_count; i++){
+		printf(1, "\tpid: %d, name: %s\n", procs[i].pid, procs[i].name);
+	}
+}
+
 // global lock for product
 lock_t lock;
 // our product
@@ -148,24 +158,17 @@ void simple_test(){
     kthread_t thread = thread_create(foo, &i);
     printf(1, "\tthread pid: %d\n", thread.pid);
     //~ sleep(300); // fixed the lll 
+    print_procs();
     thread_join(thread);
 }
 
-void print_procs(){
-	struct procinfo procs[64];
-	int proc_count = getprocsinfo(procs);
-	int i;
-	for (i=0; i<proc_count; i++){
-		printf(1, "\tpid: %d, name: %s\n", procs[i].pid, procs[i].name);
-	}
-}
 
 int main(void)
 {
 	printf(1, "starting test\n");
 	simple_test();
 	//~ orig_test();
-	
+	print_procs();
 	printf(1, "about to exit test process\n");
     exit();
 }
