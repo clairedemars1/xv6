@@ -357,7 +357,7 @@ wait(void)
 {
   //~ cprintf("inside wait\n");
   struct proc *p;
-  int havekids, pid;
+  int havekids, pid; // havekids means has process kids, it doesn't acknowledge thread kids
   struct proc *curproc = myproc();
   
   acquire(&ptable.lock);
@@ -365,11 +365,11 @@ wait(void)
     // Scan through table looking for exited children. Process repeats until have found one (intersperced with sleep)
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc)
+      if(p->parent != curproc || p->is_thread)
         continue; 
       havekids = 1;
-      //~ cprintf("\tfound a kid to clean up\n");
-      if(p->state == ZOMBIE && !(p->is_thread) ){ // so a bad zombie is one with a dead parent
+      cprintf("\tfound a kid to clean up with pid: %d\n", curproc->pid);
+      if(p->state == ZOMBIE ){ // so a bad zombie is one with a dead parent
         // Found one.
         pid = p->pid;
         kfree(p->kstack); // freeing memory
@@ -735,7 +735,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	np->state = RUNNABLE;
 
 	release(&ptable.lock);
-
+	cprintf("new proc is : %d %s\n", pid, np->name);
 	return pid;
 }
 

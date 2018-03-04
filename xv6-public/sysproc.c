@@ -98,7 +98,7 @@ int sys_getprocsinfo(void){
 	if ( argptr(0, &info, sizeof(struct procinfo) * NPROC) < 0 ){
 		return -1;
 	}
-	cprintf("info is %d\n", info);
+	//~ cprintf("info is %d\n", info);
 	return getprocsinfo( (struct procinfo*) info);
 	return 1;
 }

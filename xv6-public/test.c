@@ -27,6 +27,7 @@
 #include "user.h"
 #include "kthreads.h"
 #include "thread_lib.h"
+#include "procinfo.h"
 
 #define LOCKS_ON 0
 #define NULL 0
@@ -137,24 +138,34 @@ void orig_test(){
 }
 
 void foo(void* arg){
-	printf(1, "foo ran\n");
-	printf(1, "foo ran\n with arg %d\n", *(int*)arg);
+	printf(1, "FOO RAN \n");
+	printf(1, "FOO RAN WITH ARG %d\n", *(int*)arg); // this is not getting to run, b/c 
 	exit();
 }
 
 void simple_test(){
     init_lock(&lock);
     int i = 3;
-    //~ kthread_t thread = thread_create(foo, &i);
-    thread_create(foo, &i);
+    kthread_t thread = thread_create(foo, &i);
     //~ printf(1, "pid: %d\n", thread.pid);
+    sleep(300); // fixes the lll 
+    //~ thread_join(thread);
 }
 
 int main(void)
 {
 	printf(1, "starting test\n");
+	
+	struct procinfo procs[64];
+	int proc_count = getprocsinfo(procs);
+	int i;
+	for (i=0; i<proc_count; i++){
+		printf(1, "\tpid: %d, name: %s\n", procs[i].pid, procs[i].name);
+	}
+	
 	simple_test();
 	//~ orig_test();
 	printf(1, "about to exit\n");
+	
     exit();
 }

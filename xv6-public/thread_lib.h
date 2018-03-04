@@ -22,7 +22,7 @@ kthread_t thread_create( void (*start_routine) (void*), void* arg){
 	stack = (char*) PGROUNDUP((uint)stack); // page align 
 	printf(1, "stack: %d \n", stack);
 
-	stack += (PGSIZE); // to go to top of stack, since kernel is used to stack bottom being higher than stack top
+	stack += (PGSIZE - 1); // to go to top of stack, since kernel is used to stack bottom being higher than stack top
 	printf(1, "stack: %d \n", stack);
 
 	to_return.pid = clone(start_routine, arg, stack);
