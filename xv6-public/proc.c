@@ -276,6 +276,9 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
+  initlock(&(np->pgdir_lock), "pgdir lock for process %d", pid);
+  np->pgdir_lock_pointer = &(np->pgdir_lock);
+  
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
@@ -318,11 +321,13 @@ exit(void)
     panic("init exiting");
 
   // Close all open files.
-  for(fd = 0; fd < NOFILE; fd++){
-    if(curproc->ofile[fd]){
-      fileclose(curproc->ofile[fd]);
-      curproc->ofile[fd] = 0;
-    }
+  if ( !(curproc->is_thread) ){ //NEW
+	  for(fd = 0; fd < NOFILE; fd++){
+		if(curproc->ofile[fd]){
+		  fileclose(curproc->ofile[fd]);
+		  curproc->ofile[fd] = 0;
+		}
+	  }
   }
 
   begin_op();
@@ -374,6 +379,7 @@ wait(void)
         kfree(p->kstack); // freeing memory
         p->kstack = 0;
         freevm(p->pgdir, p); // freeing memory
+        p->pgdir_lock_pointer = 0;
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
@@ -678,10 +684,13 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 
 	// Allocate process.
 	if((np = allocthread()) == 0){
+		cprintf("dog could not allocate a thread\n");
 		return -1;
 	}
 
 	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
+	np->pgdir_lock_pointer = curproc->pgdir_lock_pointer; //DIFFERENT: use same lock 
+	// note: by referencing the lock pointer and not the lock itself, this allows a thread (which has no workign lock) to make a thread
 	np->sz = curproc->sz; //? ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc; //?
 	
@@ -732,6 +741,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 
 	release(&ptable.lock);
 	return pid;
+	cprintf("return value is pid: %d", pid);
 }
 
 int join(int pid){

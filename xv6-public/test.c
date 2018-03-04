@@ -29,7 +29,7 @@
 #include "thread_lib.h"
 #include "procinfo.h"
 
-#define LOCKS_ON 1
+#define LOCKS_ON 0
 #define NULL 0
 
 
@@ -83,6 +83,7 @@ void consumer(void* arg)
 }
 
 #define NUM_PROD 3
+//~ #define NUM_CONS 2
 #define NUM_CONS 2
 #define TOTAL_PRODUCTS 10000000
 void producer(void* arg)
@@ -116,8 +117,10 @@ void orig_test(){
     int indices[NUM_CONS];
     kthread_t producers[NUM_PROD];
     kthread_t consumers[NUM_CONS];
+    printf(1, "ready to start\n");
     for (i = 0; i < NUM_CONS; i++)
-    {
+    {	
+		printf(1, "making consumer #%d\n", i);
         indices[i] = i;
         consumers[i] = thread_create(consumer, &indices[i]);
     }
@@ -147,39 +150,48 @@ void orig_test(){
    
 }
 
-void bar(void* arg){
-	printf(1, "\t bar ran with arg %d\n", *(int*)arg); 
+void slow(void* arg){
+	printf(1, "\t slow ran with arg %d\n", *(int*)arg); 
 	sleep(300);
 	exit();
 }
 
 void when_main_process_calls_join_it_actually_waits(){
     int i = 3;
-    kthread_t thread = thread_create(bar, &i);
+    kthread_t thread = thread_create(slow, &i);
     // sleep(300); // necessary before join worked, to prevent lllll 
     thread_join(thread);
     printf(1, "\tshould not print until bar is done\n");
 }
 
-void foo(void* arg){
+void fast(void* arg){
 	printf(1, "\tfoo ran with arg %d\n", *(int*)arg); 
 	exit();
 }
 
 void join_cleans_up_procs(){
 	int i = 3;
-    kthread_t thread = thread_create(foo, &i);
+    kthread_t thread = thread_create(fast, &i);
     print_procs();
     thread_join(thread);
     print_procs();
 }
 
+void make_two_threads(){
+	int i = 3;
+	kthread_t t1 = thread_create(slow, &i);
+	kthread_t t2 = thread_create(fast, &i);
+	thread_join(t1);
+	thread_join(t2);
+	
+}
 
 int main(void)
 {
 	printf(1, "starting test\n");
 	//~ join_cleans_up_procs();
 	//~ when_main_process_calls_join_it_actually_waits();
+	//~ make_two_threads(); // works fine
 	orig_test();
 	printf(1, "about to exit test process\n");
     exit();

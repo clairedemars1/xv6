@@ -26,7 +26,7 @@ kthread_t thread_create( void (*start_routine) (void*), void* arg){
 	to_return.pid = clone(start_routine, arg, to_return.stack);
 	if (to_return.pid == -1 ) {
 		free(to_return.stack);
-		printf(1, "\t thread create FAILED\n");
+		printf(1, "\t cat thread create FAILED\n");
 		exit();
 	}
 	return to_return; 
