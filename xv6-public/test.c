@@ -153,7 +153,6 @@ void foo(void* arg){
 }
 
 void simple_test(){
-    init_lock(&lock);
     int i = 3;
     kthread_t thread = thread_create(foo, &i);
     printf(1, "\tthread pid: %d\n", thread.pid);
@@ -166,8 +165,8 @@ void simple_test(){
 int main(void)
 {
 	printf(1, "starting test\n");
-	simple_test();
-	//~ orig_test();
+	//~ simple_test();
+	orig_test();
 	print_procs();
 	printf(1, "about to exit test process\n");
     exit();
