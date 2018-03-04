@@ -15,19 +15,16 @@ kthread_t thread_create( void (*start_routine) (void*), void* arg){
 	to_return.pid = 0;
 	to_return.stack = 0;
 	
-	char* stack = malloc(2*PGSIZE);
-	if (!stack){ return to_return; }
-	printf(1, "stack: %d \n", stack);
+	to_return.stack = malloc(2*PGSIZE);
+	if (!to_return.stack){ return to_return; }
 	
-	stack = (char*) PGROUNDUP((uint)stack); // page align 
-	printf(1, "stack: %d \n", stack);
+	to_return.stack = (char*) PGROUNDUP((uint)to_return.stack); // page align 
 
-	stack += (PGSIZE - 1); // to go to top of stack, since kernel is used to stack bottom being higher than stack top
-	printf(1, "stack: %d \n", stack);
+	(to_return.stack) += (PGSIZE); // to go to top of stack, since kernel is used to stack bottom being higher than stack top
 
-	to_return.pid = clone(start_routine, arg, stack);
+	to_return.pid = clone(start_routine, arg, to_return.stack);
 	if (to_return.pid == -1 ) {
-		free(stack);
+		free(to_return.stack);
 		printf(1, "\t thread create FAILED\n");
 		exit();
 	}
@@ -36,10 +33,12 @@ kthread_t thread_create( void (*start_routine) (void*), void* arg){
 }
 
 void thread_join(kthread_t thread){
-	if ( !join(thread.pid) ){
+	int ret_val;
+	if ( ( ret_val = join(thread.pid) )== -1 ){
 		printf(1, "\t thread_join FAILED\n");
 		exit();
 	}
+	free(thread.stack);
 }
 
 void init_lock(lock_t* lock){

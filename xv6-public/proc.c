@@ -355,7 +355,6 @@ exit(void)
 int
 wait(void)
 {
-  //~ cprintf("inside wait\n");
   struct proc *p;
   int havekids, pid; // havekids means has process kids, it doesn't acknowledge thread kids
   struct proc *curproc = myproc();
@@ -368,7 +367,7 @@ wait(void)
       if(p->parent != curproc || p->is_thread)
         continue; 
       havekids = 1;
-      cprintf("\tfound a kid to clean up with pid: %d\n", curproc->pid);
+      //~ cprintf("\tfound a kid to clean up with pid: %d\n", curproc->pid);
       if(p->state == ZOMBIE ){ // so a bad zombie is one with a dead parent
         // Found one.
         pid = p->pid;
@@ -688,8 +687,6 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
 	//~ cprintf("setting stack which is %p\n", stack);
-
-	
 	
 	//~ cprintf("seting eip to fcn which is %p\n", fcn);
 	np->tf->eip = (uint) fcn;  // ADDED
@@ -698,16 +695,15 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	// stack points to the bottom of the stack (high memory end)
 	stack -= sizeof(uint);
 	*( (uint*) stack) = (uint) arg;
-	cprintf( "stack: %d \n", stack);
+	//~ cprintf( "stack: %d \n", stack);
 
 	stack -= sizeof(uint);
 	*( (uint*) stack) = 0xffffffff; 
-	cprintf( "stack: %d \n", stack);
+	//~ cprintf( "stack: %d \n", stack);
 
 	np->tf->esp = (uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
-	// causes it to print lllllll
-	cprintf( "stack: %d \n", np->tf->esp);
-
+	// caused it to print lllllll
+	//~ cprintf( "stack: %d \n", np->tf->esp);
 
 	//shared memory info
 	for (i=0; i< NSH; i++){
@@ -735,11 +731,49 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	np->state = RUNNABLE;
 
 	release(&ptable.lock);
-	cprintf("new proc is : %d %s\n", pid, np->name);
 	return pid;
 }
 
 int join(int pid){
 	// return 0 for success, -1 for failure
-	return 42; 
+	// based on wait 
+	
+	struct proc *p;
+	int thread_child_with_given_pid_exists;
+	struct proc *curproc = myproc();
+
+	acquire(&ptable.lock);
+	for(;;){ // scan through the table a bunch of times
+		// Scan through table looking for exited children. Process repeats until have found one (intersperced with sleep)
+		thread_child_with_given_pid_exists = 0;
+		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+		  
+			if(p->parent != curproc || !p->is_thread || (p->pid != pid) )
+				continue; // to the next process in the table
+			thread_child_with_given_pid_exists = 1;
+			if(p->state == ZOMBIE ){ 
+				// Found one.
+				kfree(p->kstack); // freeing memory
+				p->kstack = 0;
+				//~ freevm(p->pgdir, p); // DIFFERENT: don't free user memory, cuz this is a thread
+				p->pid = 0;
+				p->parent = 0;
+				p->name[0] = 0;
+				p->killed = 0;
+				p->state = UNUSED;
+				p->is_thread = 0;
+				release(&ptable.lock);
+				return 0; // only way to succeed
+			}
+		}
+	
+		// at this point, we've looked at all process, if the one we're looking for isn't there, then fail 
+		if(!thread_child_with_given_pid_exists || curproc->killed){
+		  release(&ptable.lock);
+		  return -1; // only way to fail
+		}
+
+		// Wait for children to exit.  (See wakeup1 call in proc_exit.)
+		sleep(curproc, &ptable.lock);  //DOC: wait-sleep
+	}
 }
