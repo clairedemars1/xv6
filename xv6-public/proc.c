@@ -696,12 +696,18 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	
 	// put arg and return address into the stack (based on exec)
 	// stack points to the bottom of the stack (high memory end)
-	stack -= 4;
-	*( (void**) stack) = arg;
-	stack -= 4;
-	*( (int*) stack) = 0xffffffff; 
+	stack -= sizeof(uint);
+	*( (uint*) stack) = (uint) arg;
+	cprintf( "stack: %d \n", stack);
+
+	stack -= sizeof(uint);
+	*( (uint*) stack) = 0xffffffff; 
+	cprintf( "stack: %d \n", stack);
+
 	np->tf->esp = (uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
 	// causes it to print lllllll
+	cprintf( "stack: %d \n", np->tf->esp);
+
 
 	//shared memory info
 	for (i=0; i< NSH; i++){
@@ -710,7 +716,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 
 	//?
 	// Clear %eax so that fork returns 0 in the child.
-	//~ np->tf->eax = 0; //? // either don't need or set to pid
+	np->tf->eax = 0; //? // either don't need or set to pid
 	//~ np->tf->eax = np->pid; 
 
 	//?

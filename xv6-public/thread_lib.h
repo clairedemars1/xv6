@@ -17,9 +17,14 @@ kthread_t thread_create( void (*start_routine) (void*), void* arg){
 	
 	char* stack = malloc(2*PGSIZE);
 	if (!stack){ return to_return; }
-	stack = (char*) PGROUNDUP((uint)stack); // page align 
-	stack += (PGSIZE); // to go to top of stack, since kernel is used to stack bottom being higher than stack top
+	printf(1, "stack: %d \n", stack);
 	
+	stack = (char*) PGROUNDUP((uint)stack); // page align 
+	printf(1, "stack: %d \n", stack);
+
+	stack += (PGSIZE); // to go to top of stack, since kernel is used to stack bottom being higher than stack top
+	printf(1, "stack: %d \n", stack);
+
 	to_return.pid = clone(start_routine, arg, stack);
 	if (to_return.pid == -1 ) {
 		free(stack);

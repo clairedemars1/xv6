@@ -137,7 +137,7 @@ void orig_test(){
 }
 
 void foo(void* arg){
-	printf(1, "foo ran\n", *(int*)arg);
+	printf(1, "foo ran\n");
 	printf(1, "foo ran\n with arg %d\n", *(int*)arg);
 	exit();
 }
