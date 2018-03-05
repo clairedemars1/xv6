@@ -694,28 +694,23 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	}
 
 	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
-	np->sz = curproc->sz; //? ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
+	np->sz = curproc->sz; // ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc; //?
 	
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
-	//~ cprintf("setting stack which is %p\n", stack);
 	
-	//~ cprintf("seting eip to fcn which is %p\n", fcn);
 	np->tf->eip = (uint) fcn;  // ADDED
+	np->tf->ebp = (uint) stack;  // ADDED
 	
 	// put arg and return address into the stack (based on exec)
 	// stack points to the bottom of the stack (high memory end)
 	stack -= sizeof(uint);
 	*( (uint*) stack) = (uint) arg;
-	//~ cprintf( "stack: %d \n", stack);
 
 	stack -= sizeof(uint);
 	*( (uint*) stack) = 0xffffffff; 
-	//~ cprintf( "stack: %d \n", stack);
 
 	np->tf->esp = (uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
-	// caused it to print lllllll
-	//~ cprintf( "stack: %d \n", np->tf->esp);
 
 	//shared memory info
 	for (i=0; i< NSH; i++){
@@ -733,7 +728,6 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	  np->ofile[i] = filedup(curproc->ofile[i]);
 	np->cwd = idup(curproc->cwd);
 
-	//~ safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 	safestrcpy(np->name, "thread", sizeof("thread"));
 
 	pid = np->pid;
@@ -743,7 +737,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	np->state = RUNNABLE;
 
 	release(&ptable.lock);
-	cprintf("clone, pid = %d\n", pid);
+	//~ cprintf("clone, pid = %d\n", pid);
 
 	return pid;
 }
