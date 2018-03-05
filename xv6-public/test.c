@@ -43,44 +43,40 @@ void print_procs(){
 	}
 }
 
+
+void slow(void* arg){
+	printf(1, "\t slow ran with arg %d\n", *(int*)arg); 
+	sleep(300);
+	exit();
+}
+
+void when_main_process_calls_join_it_actually_waits(){
+    int i = 3;
+    kthread_t thread = thread_create(slow, &i);
+    // sleep(300); // necessary before join worked, to prevent lllll 
+    thread_join(thread);
+    printf(1, "\tshould not print until bar is done\n");
+}
+
+void fast(void* arg){
+	printf(1, "\tfast ran with arg %d\n", *(int*)arg); 
+	exit();
+}
+
+void join_cleans_up_procs(){
+	int i = 3;
+    kthread_t thread = thread_create(fast, &i);
+    print_procs();
+    thread_join(thread);
+    print_procs();
+}
+
 // global lock for product
 lock_t lock;
 // our product
 int things = 0;
 int things_made = 0;
-#define MAX_CONSUME 3000000
-void consumer(void* arg)
-{
-	//~ printf(1, "consumer got called\n");
-    int i;
-    int consumed = 0;
-    // dumb little busy sleep
-    for (i = 0; i < 200; i++);
-    
-    while (consumed < MAX_CONSUME)
-    {
-        // not thread safe but give producers time
-        while(things <= 0);
-        #if LOCKS_ON
-        lock_acquire(&lock);
-        #endif
-        if (things > 0)
-        {
-            // useful consumption of resources algorithm
-            // guaranteed optimal usage
-            --things;
-            ++consumed;
-        }
-        #if LOCKS_ON
-        lock_release(&lock);
-        #endif
-    }
-    
-    printf(1, "consumer %d consumed: %d\n", *(int*)arg, consumed);
 
-
-    exit();
-}
 
 #define NUM_PROD 3
 //~ #define NUM_CONS 2
@@ -111,88 +107,92 @@ void producer(void* arg)
     exit();
 }
 
+#define MAX_CONSUME 3000000
+void consumer(void* arg)
+{
+	//~ printf(1, "consumer got called\n");
+    int i;
+    int consumed = 0;
+    // dumb little busy sleep
+    for (i = 0; i < 200; i++);
+    
+    while (consumed < MAX_CONSUME)
+    {
+        // not thread safe but give producers time
+        while(things <= 0);
+        #if LOCKS_ON
+        lock_acquire(&lock);
+        #endif
+        if (things > 0)
+        {
+            // useful consumption of resources algorithm
+            // guaranteed optimal usage
+            --things;
+            ++consumed;
+        }
+        #if LOCKS_ON
+        lock_release(&lock);
+        #endif
+    }
+    printf(1, "consumer %d consumed: %d\n", *(int*)arg, consumed);
+    exit();
+}
+
+void make_two_threads(){
+	int i = 3;
+	kthread_t t1 = thread_create(fast, &i);
+	kthread_t t2 = thread_create(fast, &i);
+	thread_join(t1);
+	thread_join(t2);
+}
+
 void orig_test(){
 	int i;
     init_lock(&lock);
     int indices[NUM_CONS];
-    kthread_t producers[NUM_PROD];
+    //~ kthread_t producers[NUM_PROD];
     kthread_t consumers[NUM_CONS];
-    printf(1, "ready to start\n");
     for (i = 0; i < NUM_CONS; i++)
     {	
 		printf(1, "making consumer #%d\n", i);
         indices[i] = i;
         consumers[i] = thread_create(consumer, &indices[i]);
     }
-    for (i = 0; i < NUM_PROD; i++)
-    {
-        producers[i] = thread_create(producer, NULL);
-    }
-    for (i = 0; i < NUM_PROD; i++)
-    {
-        thread_join(producers[i]);
-    }
+    
+    //~ for (i = 0; i < NUM_PROD; i++)
+    //~ {
+        //~ producers[i] = thread_create(producer, NULL);
+    //~ }
+    //~ for (i = 0; i < NUM_PROD; i++)
+    //~ {
+        //~ thread_join(producers[i]);
+    //~ }
     for (i = 0; i < NUM_CONS; i++)
     {
         thread_join(consumers[i]);
     }
-    printf(1, "Remaining products: %d\n", things); 
-    printf(1, "Things made: %d\n", things_made); 
-    #define REMAINING (int)(TOTAL_PRODUCTS - NUM_CONS * (double)MAX_CONSUME)
-    if (things != (REMAINING))
-    {
-        printf(1, "Lock/thread issue detected, should be %d things left\n", REMAINING);
-    }
-    else
-    {
-        printf(1, "Test passed!\n");
-    }
+    //~ printf(1, "Remaining products: %d\n", things); 
+    //~ printf(1, "Things made: %d\n", things_made); 
+    //~ #define REMAINING (int)(TOTAL_PRODUCTS - NUM_CONS * (double)MAX_CONSUME)
+    //~ if (things != (REMAINING))
+    //~ {
+        //~ printf(1, "Lock/thread issue detected, should be %d things left\n", REMAINING);
+    //~ }
+    //~ else
+    //~ {
+        //~ printf(1, "Test passed!\n");
+    //~ }
    
 }
 
-void slow(void* arg){
-	printf(1, "\t slow ran with arg %d\n", *(int*)arg); 
-	sleep(300);
-	exit();
-}
-
-void when_main_process_calls_join_it_actually_waits(){
-    int i = 3;
-    kthread_t thread = thread_create(slow, &i);
-    // sleep(300); // necessary before join worked, to prevent lllll 
-    thread_join(thread);
-    printf(1, "\tshould not print until bar is done\n");
-}
-
-void fast(void* arg){
-	printf(1, "\tfoo ran with arg %d\n", *(int*)arg); 
-	exit();
-}
-
-void join_cleans_up_procs(){
-	int i = 3;
-    kthread_t thread = thread_create(fast, &i);
-    print_procs();
-    thread_join(thread);
-    print_procs();
-}
-
-void make_two_threads(){
-	int i = 3;
-	kthread_t t1 = thread_create(slow, &i);
-	kthread_t t2 = thread_create(fast, &i);
-	thread_join(t1);
-	thread_join(t2);
-	
-}
 
 int main(void)
 {
 	printf(1, "starting test\n");
-	join_cleans_up_procs();
+	//~ join_cleans_up_procs();
 	//~ when_main_process_calls_join_it_actually_waits();
 	//~ make_two_threads(); // works fine
-	//~ orig_test();
+	orig_test();
 	printf(1, "about to exit test process\n");
     exit();
 }
