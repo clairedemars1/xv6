@@ -80,8 +80,8 @@ int things_made = 0;
 
 #define NUM_PROD 3
 #define NUM_CONS 2
-//~ #define TOTAL_PRODUCTS 10000000 // 10,000,000   //  NUM_CONS*MAXCONSUMED
-#define TOTAL_PRODUCTS 10
+#define TOTAL_PRODUCTS 10000000 // 10,000,000   //  NUM_CONS*MAXCONSUMED
+//~ #define TOTAL_PRODUCTS 10
 void producer(void* arg)
 {
     int cont = 1;
@@ -108,8 +108,8 @@ void producer(void* arg)
     exit();
 }
 
-//~ #define MAX_CONSUME 3000000 // 3,000,000
-#define MAX_CONSUME 3
+#define MAX_CONSUME 3000000 // 3,000,000
+//~ #define MAX_CONSUME 3
 void consumer(void* arg)
 {
 	//~ printf(1, "consumer got called\n"); // changes execution
