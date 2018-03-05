@@ -242,7 +242,7 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
-  
+  // changes
   //~ acquire(&ptable.all_heaps_lock);
   //~ release(&ptable.all_heaps_lock); // no problem if i do them righ tafter each other
   
