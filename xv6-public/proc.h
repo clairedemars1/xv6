@@ -62,6 +62,8 @@ struct proc {
   struct sh_pg shared_pages[NSH]; // info on the shared pages the process has access to
 									// index indicates page number (0 to NSH-1)
   int is_thread; 			// wait() waits only for processes not threads where thread is a proc created by clone
+  struct spinlock heap_lock; 	// for sake of threads (only the maker process actually fills this in)
+  struct spinlock* heap_lock_pointer; // to allow threads to make threads
 };
 
 

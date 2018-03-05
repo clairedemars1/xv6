@@ -123,6 +123,8 @@ found:
   p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
   
   p->is_thread = 0; //NEW
+  initlock(&p->heap_lock, "heap lock"); //NEW
+  p->heap_lock_pointer = &p->heap_lock; // NEW
   return p;
   
   // summary, we set up directions to 2 functions
@@ -131,18 +133,15 @@ found:
 }
 
 static struct proc*
-//~ allocthread(void (*function_to_run) (void*)  )
 allocthread(void)
 {
 	// only differences from allocproc: 
-		// 
-		// goes to th function instead of trapret
 		// value of p->is_thread;
+		// p's heap lock
 	
 	
-	//~ cprintf("function to run is : %p\n", function_to_run);
   struct proc *p;
-  //~ struct proc *old_proc = myproc();
+  struct proc *old_proc = myproc();
   char *sp;
 
   acquire(&ptable.lock);
@@ -181,7 +180,6 @@ found:
   // Set up new context to start executing at forkret,
   // which returns to trapret.
   sp -= 4;
-  //~ *(uint*)sp = (uint)trapret; // put the function trapret's memory address at the next spot in the stack
   *(uint*)sp = (uint)trapret; 
 
   sp -= sizeof *p->context; // ie *(p->context);  // move down, past a chunk the size of a context struct
@@ -189,6 +187,9 @@ found:
   memset(p->context, 0, sizeof *p->context); // zero out the context (this is not the zero causing the nullptr error)
   p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
   p->is_thread = 1; //NEW
+  p->heap_lock_pointer = old_proc->heap_lock_pointer; //NEW
+  // don't initialize the heap_lock, since don't need to use it
+  
   return p;
   
   // summary, we set up directions to 2 functions
@@ -243,6 +244,7 @@ growproc(int n)
   uint sz;
   struct proc *curproc = myproc();
   
+  acquire(curproc->heap_lock_pointer);
   //~ acquire(&ptable.all_heaps_lock);
   //~ release(&ptable.all_heaps_lock); // no problem if i do them righ tafter each other
   
@@ -250,14 +252,17 @@ growproc(int n)
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
 	  //~ release(&ptable.all_heaps_lock);
+	  release(curproc->heap_lock_pointer);
       return -1;
   } else if(n < 0){
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
       //~ release(&ptable.all_heaps_lock);
+	  release(curproc->heap_lock_pointer);
       return -1;
   }
   //~ release(&ptable.all_heaps_lock);
   curproc->sz = sz;
+  release(curproc->heap_lock_pointer);
   switchuvm(curproc);
   return 0;
 }
@@ -700,7 +705,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
 	
 	np->tf->eip = (uint) fcn;  // ADDED
-	np->tf->ebp = (uint) stack;  // ADDED
+	np->tf->ebp = (uint) stack;  // ADDED, maybe should be stack after added things
 	
 	// put arg and return address into the stack (based on exec)
 	// stack points to the bottom of the stack (high memory end)
