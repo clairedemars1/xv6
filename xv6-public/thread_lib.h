@@ -52,5 +52,5 @@ void lock_acquire(lock_t* lock){
 }
 
 void lock_release(lock_t* lock){
-	lock->flag = 0;
+	lock->flag = 0; // consider making assembly
 }
