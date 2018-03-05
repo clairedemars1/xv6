@@ -743,8 +743,9 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	np->state = RUNNABLE;
 
 	release(&ptable.lock);
+	cprintf("clone, pid = %d\n", pid);
+
 	return pid;
-	cprintf("return value is pid: %d", pid);
 }
 
 int join(int pid){

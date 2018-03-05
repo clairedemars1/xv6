@@ -29,7 +29,7 @@
 #include "thread_lib.h"
 #include "procinfo.h"
 
-#define LOCKS_ON 0
+#define LOCKS_ON 1
 #define NULL 0
 
 
@@ -79,9 +79,9 @@ int things_made = 0;
 
 
 #define NUM_PROD 3
-//~ #define NUM_CONS 2
 #define NUM_CONS 2
-#define TOTAL_PRODUCTS 10000000
+//~ #define TOTAL_PRODUCTS 10000000 // 10,000,000  
+#define TOTAL_PRODUCTS 100
 void producer(void* arg)
 {
     int cont = 1;
@@ -104,10 +104,12 @@ void producer(void* arg)
         lock_release(&lock);
         #endif
     }
+    printf(1, "done with producer\n");
     exit();
 }
 
-#define MAX_CONSUME 3000000
+//~ #define MAX_CONSUME 3000000 // 3,000,000
+#define MAX_CONSUME 30
 void consumer(void* arg)
 {
 	//~ printf(1, "consumer got called\n");
@@ -118,23 +120,27 @@ void consumer(void* arg)
     
     while (consumed < MAX_CONSUME)
     {
+		//~ printf(1, "in consumer while\n");
         // not thread safe but give producers time
         while(things <= 0);
-        #if LOCKS_ON
-        lock_acquire(&lock);
-        #endif
-        if (things > 0)
-        {
-            // useful consumption of resources algorithm
-            // guaranteed optimal usage
-            --things;
-            ++consumed;
+			#if LOCKS_ON
+			lock_acquire(&lock);
+			#endif
+			if (things > 0)
+			{
+				// useful consumption of resources algorithm
+				// guaranteed optimal usage
+				--things;
+				++consumed;
         }
+        
+        //~ ++consumed; //added
         #if LOCKS_ON
         lock_release(&lock);
         #endif
     }
-    printf(1, "consumer %d consumed: %d\n", *(int*)arg, consumed);
+    printf(1, "done with while\n");
+    //~ printf(1, "consumer %d consumed: %d\n", *(int*)arg, consumed);
     exit();
 }
 
@@ -150,38 +156,39 @@ void orig_test(){
 	int i;
     init_lock(&lock);
     int indices[NUM_CONS];
-    //~ kthread_t producers[NUM_PROD];
+    kthread_t producers[NUM_PROD];
     kthread_t consumers[NUM_CONS];
     for (i = 0; i < NUM_CONS; i++)
     {	
-		printf(1, "making consumer #%d\n", i);
+		//~ printf(1, "making consumer #%d\n", i);
         indices[i] = i;
         consumers[i] = thread_create(consumer, &indices[i]);
     }
     
-    //~ for (i = 0; i < NUM_PROD; i++)
-    //~ {
-        //~ producers[i] = thread_create(producer, NULL);
-    //~ }
-    //~ for (i = 0; i < NUM_PROD; i++)
-    //~ {
-        //~ thread_join(producers[i]);
-    //~ }
+    for (i = 0; i < NUM_PROD; i++)
+    {
+		//~ printf(1, "making producer#%d\n", i);
+        producers[i] = thread_create(producer, NULL);
+    }
+    for (i = 0; i < NUM_PROD; i++)
+    {
+        thread_join(producers[i]);
+    }
     for (i = 0; i < NUM_CONS; i++)
     {
         thread_join(consumers[i]);
     }
-    //~ printf(1, "Remaining products: %d\n", things); 
-    //~ printf(1, "Things made: %d\n", things_made); 
-    //~ #define REMAINING (int)(TOTAL_PRODUCTS - NUM_CONS * (double)MAX_CONSUME)
-    //~ if (things != (REMAINING))
-    //~ {
-        //~ printf(1, "Lock/thread issue detected, should be %d things left\n", REMAINING);
-    //~ }
-    //~ else
-    //~ {
-        //~ printf(1, "Test passed!\n");
-    //~ }
+    printf(1, "Remaining products: %d\n", things); 
+    printf(1, "Things made: %d\n", things_made); 
+    #define REMAINING (int)(TOTAL_PRODUCTS - NUM_CONS * (double)MAX_CONSUME)
+    if (things != (REMAINING))
+    {
+        printf(1, "Lock/thread issue detected, should be %d things left\n", REMAINING);
+    }
+    else
+    {
+        printf(1, "Test passed!\n");
+    }
    
 }
 
