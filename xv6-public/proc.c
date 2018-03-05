@@ -11,6 +11,7 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC]; // actually procs plural
+  struct spinlock all_heaps_lock;
 } ptable;
 
 static struct proc *initproc;
@@ -25,6 +26,7 @@ void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
+  initlock(&ptable.all_heaps_lock, "lock all heaps for sake of threads");
 }
 
 // Must be called with interrupts disabled
@@ -240,15 +242,21 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
-
+  
+  //~ acquire(&ptable.all_heaps_lock);
+  //~ release(&ptable.all_heaps_lock); // no problem if i do them righ tafter each other
+  
   sz = curproc->sz;
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+	  //~ release(&ptable.all_heaps_lock);
       return -1;
   } else if(n < 0){
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
+      //~ release(&ptable.all_heaps_lock);
       return -1;
   }
+  //~ release(&ptable.all_heaps_lock);
   curproc->sz = sz;
   switchuvm(curproc);
   return 0;
@@ -276,8 +284,6 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
-  initlock(&(np->pgdir_lock), "pgdir lock for process %d", pid);
-  np->pgdir_lock_pointer = &(np->pgdir_lock);
   
   np->sz = curproc->sz;
   np->parent = curproc;
@@ -379,7 +385,6 @@ wait(void)
         kfree(p->kstack); // freeing memory
         p->kstack = 0;
         freevm(p->pgdir, p); // freeing memory
-        p->pgdir_lock_pointer = 0;
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
@@ -689,8 +694,6 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	}
 
 	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
-	np->pgdir_lock_pointer = curproc->pgdir_lock_pointer; //DIFFERENT: use same lock 
-	// note: by referencing the lock pointer and not the lock itself, this allows a thread (which has no workign lock) to make a thread
 	np->sz = curproc->sz; //? ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc; //?
 	

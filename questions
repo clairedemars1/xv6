@@ -1,4 +1,18 @@
 
+Q: 
+why getting trap and sched lock panic when lock in growproc?
+
+Q: 
+what do i want to lock kernel side?
+should i worry about them writing at the same time, or just about them getting access to the same chunk (ie of heap)?
+why?
+
+Note:
+where put kernel locks?
+I've decided just to worry about getting access, not writing/reading
+thus i only care about when a process mallocs the heap
+malloc uses sbrk (questionable connection) which uses growproc w. uses mappages (NOT walkpgdir)
+
 Q:
 how does fork work
 specifically, how does part of it return the pid and the other part just pull the zero out of the trapframe?
