@@ -26,7 +26,6 @@
 #include "stat.h"
 #include "user.h"
 #include "kthreads.h"
-#include "thread_lib.h"
 #include "procinfo.h"
 
 #define LOCKS_ON 1
@@ -80,8 +79,7 @@ int things_made = 0;
 
 #define NUM_PROD 3
 #define NUM_CONS 2
-#define TOTAL_PRODUCTS 10000000 // 10,000,000   //  NUM_CONS*MAXCONSUMED
-//~ #define TOTAL_PRODUCTS 10
+#define TOTAL_PRODUCTS 10000000 // 10,000,000   //  <NUM_CONS*MAXCONSUMED
 void producer(void* arg)
 {
     int cont = 1;
@@ -104,15 +102,12 @@ void producer(void* arg)
         lock_release(&lock);
         #endif
     }
-    //~ printf(1, "done with producer\n");
     exit();
 }
 
 #define MAX_CONSUME 3000000 // 3,000,000
-//~ #define MAX_CONSUME 3
 void consumer(void* arg)
 {
-	//~ printf(1, "consumer got called\n"); // changes execution
     int i;
     int consumed = 0;
     // dumb little busy sleep
@@ -126,8 +121,6 @@ void consumer(void* arg)
 		#if LOCKS_ON
 		lock_acquire(&lock);
 		#endif
-		//~ printf(1, "consumerm#: %d, things: %d, consumed: %d\n", * (int*) arg, things, consumed);
-		//~ printf(1, "FISH\n");
 
 		if (things > 0)
 		{
@@ -135,16 +128,12 @@ void consumer(void* arg)
 			// guaranteed optimal usage
 			--things;
 			++consumed;
-			//~ printf(1, "pidgeon\n");
         }
         
-        //~ ++consumed; //added
         #if LOCKS_ON
         lock_release(&lock);
         #endif
     }
-    //~ printf(1, "DONE\n");
-    //~ printf(1, "consumer %d consumed: %d\n", *(int*)arg, consumed);
     exit();
 }
 
@@ -164,14 +153,12 @@ void orig_test(){
     kthread_t consumers[NUM_CONS];
     for (i = 0; i < NUM_CONS; i++)
     {	
-		// printf(1, "making consumer #%d\n", i);
         indices[i] = i;
         consumers[i] = thread_create(consumer, &indices[i]);
     }
     
     for (i = 0; i < NUM_PROD; i++)
     {
-		// printf(1, "making producer#%d\n", i);
         producers[i] = thread_create(producer, NULL);
     }
     for (i = 0; i < NUM_PROD; i++)
@@ -199,10 +186,10 @@ void orig_test(){
 int main(void)
 {
 	//~ printf(1, "starting test\n");
-	join_cleans_up_procs();
+	//~ join_cleans_up_procs();
 	//~ when_main_process_calls_join_it_actually_waits();
 	//~ make_two_threads(); // works fine
-	//~ orig_test();
+	orig_test();
 	//~ printf(1, "about to exit test process\n");
     exit();
 }

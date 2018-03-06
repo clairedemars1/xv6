@@ -236,6 +236,7 @@ userinit(void)
   release(&ptable.lock);
 }
 
+#define should_use_global_lock 0
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
 int
@@ -244,25 +245,28 @@ growproc(int n)
   uint sz;
   struct proc *curproc = myproc();
   
-  acquire(curproc->heap_lock_pointer);
-  //~ acquire(&ptable.all_heaps_lock);
-  //~ release(&ptable.all_heaps_lock); // no problem if i do them righ tafter each other
-  
+  #if should_use_global_lock
+	acquire(&ptable.all_heaps_lock); // actually, this line alone is enough to cause the panic
+  #endif
+
   sz = curproc->sz;
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
-	  //~ release(&ptable.all_heaps_lock);
-	  release(curproc->heap_lock_pointer);
+      #if should_use_global_lock
+	  release(&ptable.all_heaps_lock);
+	  #endif
       return -1;
   } else if(n < 0){
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
-      //~ release(&ptable.all_heaps_lock);
-	  release(curproc->heap_lock_pointer);
+		#if should_use_global_lock
+		release(&ptable.all_heaps_lock);
+		#endif	
       return -1;
   }
-  //~ release(&ptable.all_heaps_lock);
   curproc->sz = sz;
-  release(curproc->heap_lock_pointer);
+	#if should_use_global_lock
+	release(&ptable.all_heaps_lock);
+	#endif
   switchuvm(curproc);
   return 0;
 }
