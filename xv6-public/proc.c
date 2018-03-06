@@ -235,7 +235,7 @@ userinit(void)
 }
 
 #define should_use_global_lock 0
-#define should_specific 1
+#define should_specific 0
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
 int
@@ -254,6 +254,7 @@ growproc(int n)
 	sz = curproc->sz;
 	if(n > 0){
 		if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0){
+			cprintf("case 1");
 			#if should_use_global_lock
 			release(&ptable.all_heaps_lock);
 			#endif

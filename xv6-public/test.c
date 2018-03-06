@@ -50,11 +50,13 @@ void slow(void* arg){
 }
 
 void when_main_process_calls_join_it_actually_waits(){
+	printf(1, "starting new test case\n");
     int i = 3;
     kthread_t thread = thread_create(slow, &i);
     // sleep(300); // necessary before join worked, to prevent lllll 
+    printf(1, "got past create\n");
     thread_join(thread);
-    printf(1, "\tshould not print until bar is done\n");
+    printf(1, "\tshould not print until slow is done\n");
 }
 
 void fast(void* arg){
@@ -186,10 +188,10 @@ void orig_test(){
 int main(void)
 {
 	//~ printf(1, "starting test\n");
-	//~ join_cleans_up_procs();
-	//~ when_main_process_calls_join_it_actually_waits();
+	join_cleans_up_procs();
+	when_main_process_calls_join_it_actually_waits();
 	//~ make_two_threads(); // works fine
-	orig_test();
+	//~ orig_test();
 	//~ printf(1, "about to exit test process\n");
     exit();
 }
