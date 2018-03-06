@@ -677,11 +677,6 @@ void call_kernal_version(void){
 }
 
 
-//~ int clone(void (*fcn) (void*), void *arg, void*stack){
-	//~ return fork();
-//~ }
-
-
 int clone(void (*fcn) (void*), void *arg, void*stack){
 	// make a thread
 	
@@ -689,8 +684,6 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	// basically, make a new process, but sharing the pgdir of the calling process
 	// and using the passed user stack
 	// with execution as if it had just called the function fcn with the arg arg
-	
-	// todo: copy over the argument into the stack, set things up so its like the function has just started running
 	
 	int i, pid;
 	struct proc *np;
@@ -704,12 +697,12 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 
 	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
 	np->sz = curproc->sz; // ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
-	np->parent = curproc; //?
+	np->parent = curproc;
 	
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
 	
 	np->tf->eip = (uint) fcn;  // ADDED
-	np->tf->ebp = (uint) stack;  // ADDED, maybe should be stack after added things
+	//~ np->tf->ebp = (uint) stack;  // ADDED
 	
 	// put arg and return address into the stack (based on exec)
 	// stack points to the bottom of the stack (high memory end)
@@ -719,25 +712,24 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	stack -= sizeof(uint);
 	*( (uint*) stack) = 0xffffffff; 
 
-	np->tf->esp = (uint) stack;  // ADDED (based on exec) // tell them to use the given user stack instead
+	np->tf->esp = (uint) stack;  // ADDED
 
 	//shared memory info
 	for (i=0; i< NSH; i++){
 		np->shared_pages[i] = curproc->shared_pages[i];
 	}
 
-	//?
 	// Clear %eax so that fork returns 0 in the child.
-	np->tf->eax = 0; //? // either don't need or set to pid
-	//~ np->tf->eax = np->pid; 
-
-	//?
+	np->tf->eax = 0; //?
+	
 	for(i = 0; i < NOFILE; i++)
 	if(curproc->ofile[i])
-	  np->ofile[i] = filedup(curproc->ofile[i]);
-	np->cwd = idup(curproc->cwd);
+	  //~ np->ofile[i] = filedup(curproc->ofile[i]);
+	  np->ofile[i] = curproc->ofile[i];
+	//~ np->cwd = idup(curproc->cwd);
+	np->cwd = curproc->cwd;
 
-	safestrcpy(np->name, "thread", sizeof("thread"));
+	safestrcpy(np->name, "thread", sizeof("thread")); // ADDED
 
 	pid = np->pid;
 
@@ -746,7 +738,6 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	np->state = RUNNABLE;
 
 	release(&ptable.lock);
-	//~ cprintf("clone, pid = %d\n", pid);
 
 	return pid;
 }

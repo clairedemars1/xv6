@@ -11,6 +11,7 @@ Changes Made:
 	- undo check for 0 in argptr() (since we need to pass NULL to system call clone via the producer function)
 	- kernel locks: The problem we talked about came back. In growproc(), there's a var you can toggle to see it.
 	- clone and join are in proc.c
-	- I changed fork and clone to update thread-specific proc info after calling allocproc 
+	- I changed fork and clone to update thread-specific proc info after calling allocproc
+	 
 		
 
