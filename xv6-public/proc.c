@@ -241,6 +241,7 @@ userinit(void)
 int
 growproc(int n)
 {
+	cprintf("inside grow proc\n");
 	uint sz;
 	struct proc *curproc = myproc();
 
@@ -254,7 +255,7 @@ growproc(int n)
 	sz = curproc->sz;
 	if(n > 0){
 		if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0){
-			cprintf("case 1");
+			cprintf("case 1\n");
 			#if should_use_global_lock
 			release(&ptable.all_heaps_lock);
 			#endif
@@ -265,16 +266,19 @@ growproc(int n)
 		}
 	} else if(n < 0){
 		if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0){
+			cprintf("case 2\n");
 			#if should_use_global_lock
 			release(&ptable.all_heaps_lock);
 			#endif	
 			#if should_specific
 			release(curproc->heap_lock_pointer);
 			#endif
-		  return -1;
+			
+		    return -1;
 		}
 	}
 	
+	cprintf("case 3\n");
 	curproc->sz = sz;
 	#if should_use_global_lock
 	release(&ptable.all_heaps_lock);
@@ -283,6 +287,7 @@ growproc(int n)
 		release(curproc->heap_lock_pointer);
 	#endif
 	switchuvm(curproc);
+	
 	return 0;
 }
 
@@ -706,10 +711,12 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	int i, pid;
 	struct proc *np;
 	struct proc *curproc = myproc();
+	cprintf("inside clone\n");
 
 	// Allocate process.
 	if((np = allocproc()) == 0){
 		cprintf("dog could not allocate a thread\n");
+		
 		return -1;
 	}
 	np->is_thread = 1; //DIFF
@@ -758,6 +765,7 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	np->state = RUNNABLE;
 
 	release(&ptable.lock);
+	cprintf("done with clone (regular way)\n");
 
 	return pid;
 }
@@ -804,4 +812,5 @@ int join(int pid){
 		// Wait for children to exit.  (See wakeup1 call in proc_exit.)
 		sleep(curproc, &ptable.lock);  //DOC: wait-sleep
 	}
+	cprintf("done with clone\n");
 }

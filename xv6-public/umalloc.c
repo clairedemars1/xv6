@@ -46,23 +46,28 @@ free(void *ap)
 static Header*
 morecore(uint nu)
 {
+  printf(1, "in morecore\n");
   char *p;
   Header *hp;
 
   if(nu < 4096)
     nu = 4096;
   p = sbrk(nu * sizeof(Header));
-  if(p == (char*)-1)
+  if(p == (char*)-1){
+	printf(1, "done with morecore\n");
     return 0;
+  }
   hp = (Header*)p;
   hp->s.size = nu;
   free((void*)(hp + 1));
+	printf(1, "done with morecore\n");
   return freep;
 }
 
 void*
 malloc(uint nbytes)
 {
+	printf(1, "inside malloc\n");
   Header *p, *prevp;
   uint nunits;
 
@@ -71,6 +76,7 @@ malloc(uint nbytes)
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
   }
+  printf(1, "before malloc for loop\n");
   for(p = prevp->s.ptr; ; prevp = p, p = p->s.ptr){
     if(p->s.size >= nunits){
       if(p->s.size == nunits)
@@ -81,10 +87,15 @@ malloc(uint nbytes)
         p->s.size = nunits;
       }
       freep = prevp;
+      printf(1, "done with malloc\n");
       return (void*)(p + 1);
     }
     if(p == freep)
-      if((p = morecore(nunits)) == 0)
+      printf(1, "calling another function\n");
+      if((p = morecore(nunits)) == 0){
+		printf(1, "done with malloc\n");
         return 0;
+	}
   }
+  
 }

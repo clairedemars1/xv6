@@ -147,6 +147,16 @@ void make_two_threads(){
 	thread_join(t2);
 }
 
+void make_two_threads_in_sequence(){
+	int i = 3;
+	kthread_t t1 = thread_create(fast, &i);
+	thread_join(t1);
+
+	printf(1, "DONE with thread 1\n");
+	kthread_t t2 = thread_create(fast, &i);
+	thread_join(t2);
+} 
+
 void orig_test(){
 	int i;
     init_lock(&lock);
@@ -188,9 +198,11 @@ void orig_test(){
 int main(void)
 {
 	//~ printf(1, "starting test\n");
-	join_cleans_up_procs();
-	when_main_process_calls_join_it_actually_waits();
-	//~ make_two_threads(); // works fine
+	//~ join_cleans_up_procs();
+	//~ join_cleans_up_procs();
+	//~ when_main_process_calls_join_it_actually_waits();
+	//~ make_two_threads(); // works 
+	make_two_threads_in_sequence();
 	//~ orig_test();
 	//~ printf(1, "about to exit test process\n");
     exit();

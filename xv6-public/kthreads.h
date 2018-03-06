@@ -12,23 +12,30 @@ typedef struct lock_t {
 
 
 kthread_t thread_create( void (*start_routine) (void*), void* arg){
+	printf(1, "inside thread_create\n");
 	kthread_t to_return;
 	to_return.pid = 0;
 	to_return.stack = 0;
-	
+	printf(1, "before malloc\n");
 	to_return.stack = malloc(2*PGSIZE);
-	if (!to_return.stack){ return to_return; }
+	printf(1, "after malloc\n");
+	if (!to_return.stack){ 
+		printf(1, "thread create returning early\n");
+		return to_return;
+	}
 	
 	to_return.stack = (char*) PGROUNDUP((uint)to_return.stack); // page align 
 
 	(to_return.stack) += (PGSIZE); // to go to top of stack, since kernel is used to stack bottom being higher than stack top
-
+	printf(1, "before clone call\n");
 	to_return.pid = clone(start_routine, arg, to_return.stack);
+	printf(1, "after clone call\n");
 	if (to_return.pid == -1 ) {
 		free(to_return.stack);
 		printf(1, "\t cat thread create FAILED\n");
 		exit();
 	}
+	printf(1, "thread created succeeded\n");
 	return to_return; 
 	
 }
