@@ -50,11 +50,9 @@ void slow(void* arg){
 }
 
 void when_main_process_calls_join_it_actually_waits(){
-	printf(1, "starting new test case\n");
     int i = 3;
     kthread_t thread = thread_create(slow, &i);
     // sleep(300); // necessary before join worked, to prevent lllll 
-    printf(1, "got past create\n");
     thread_join(thread);
     printf(1, "\tshould not print until slow is done\n");
 }
@@ -147,13 +145,17 @@ void make_two_threads(){
 	thread_join(t2);
 }
 
+void do_nothing(void* arg){
+	exit();
+}
+
 void make_two_threads_in_sequence(){
+	printf(1, "make two threads in sequence\n");
 	int i = 3;
-	kthread_t t1 = thread_create(fast, &i);
+	kthread_t t1 = thread_create(do_nothing, &i);
 	thread_join(t1);
 
-	printf(1, "DONE with thread 1\n");
-	kthread_t t2 = thread_create(fast, &i);
+	kthread_t t2 = thread_create(do_nothing, &i);
 	thread_join(t2);
 } 
 
@@ -197,13 +199,10 @@ void orig_test(){
 
 int main(void)
 {
-	//~ printf(1, "starting test\n");
-	//~ join_cleans_up_procs();
 	//~ join_cleans_up_procs();
 	//~ when_main_process_calls_join_it_actually_waits();
-	//~ make_two_threads(); // works 
-	make_two_threads_in_sequence();
-	//~ orig_test();
-	//~ printf(1, "about to exit test process\n");
+	//~ make_two_threads(); 
+	//~ make_two_threads_in_sequence();
+	orig_test();
     exit();
 }

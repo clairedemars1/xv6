@@ -130,71 +130,6 @@ found:
   // forkret (in the instruction pointer of the context), presumably for the kernal thread
 }
 
-/*
-static struct proc*
-allocthread(void)
-{
-	// only differences from allocproc: 
-		// value of p->is_thread;
-		// p's heap lock
-	
-	
-  struct proc *p;
-  struct proc *old_proc = myproc();
-  char *sp;
-
-  acquire(&ptable.lock);
-
-  // get a proc struct
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == UNUSED)
-      goto found;
-
-  release(&ptable.lock);
-  return 0;
-
-found:
-  p->state = EMBRYO;
-  p->pid = nextpid++;
-  
-  // initialize process's record of shared_pages
-	int i;
-	for(i=0; i<NSH; i++){
-		p-> shared_pages[i].virtual_addr = 0;
-	}
-
-  release(&ptable.lock);
-
-  // Allocate kernel stack.
-  if((p->kstack = kalloc()) == 0){
-    p->state = UNUSED;
-    return 0;
-  }
-  sp = p->kstack + KSTACKSIZE; // go to the bottom of the stack
-
-  // Leave room for trap frame.
-  sp -= sizeof *p->tf; 
-  p->tf = (struct trapframe*)sp; 
-
-  // Set up new context to start executing at forkret,
-  // which returns to trapret.
-  sp -= 4;
-  *(uint*)sp = (uint)trapret; 
-
-  sp -= sizeof *p->context; // ie *(p->context);  // move down, past a chunk the size of a context struct
-  p->context = (struct context*)sp;
-  memset(p->context, 0, sizeof *p->context); // zero out the context (this is not the zero causing the nullptr error)
-  p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
-  
-  // don't initialize the heap_lock, since don't need to use it
-  
-  return p;
-  
-  // summary, we set up directions to 2 functions
-  // trapret (in between the trapframe and the context), presumably for the user thread
-  // forkret (in the instruction pointer of the context), presumably for the kernal thread
-}
-*/
 
 //PAGEBREAK: 32
 // Set up first user process.
@@ -711,12 +646,10 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	int i, pid;
 	struct proc *np;
 	struct proc *curproc = myproc();
-	cprintf("inside clone\n");
 
 	// Allocate process.
 	if((np = allocproc()) == 0){
-		cprintf("dog could not allocate a thread\n");
-		
+		cprintf("could not allocate a thread\n");
 		return -1;
 	}
 	np->is_thread = 1; //DIFF
@@ -765,7 +698,6 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	np->state = RUNNABLE;
 
 	release(&ptable.lock);
-	cprintf("done with clone (regular way)\n");
 
 	return pid;
 }
