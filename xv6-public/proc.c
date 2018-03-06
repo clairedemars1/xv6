@@ -122,9 +122,7 @@ found:
   memset(p->context, 0, sizeof *p->context); // zero out the context
   p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
   
-  p->is_thread = 0; //NEW
-  initlock(&p->heap_lock, "heap lock"); //NEW
-  p->heap_lock_pointer = &p->heap_lock; // NEW
+  
   return p;
   
   // summary, we set up directions to 2 functions
@@ -132,6 +130,7 @@ found:
   // forkret (in the instruction pointer of the context), presumably for the kernal thread
 }
 
+/*
 static struct proc*
 allocthread(void)
 {
@@ -186,8 +185,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context); // zero out the context (this is not the zero causing the nullptr error)
   p->context->eip = (uint)forkret; // set the context's instruction pointer to the forkret 
-  p->is_thread = 1; //NEW
-  p->heap_lock_pointer = old_proc->heap_lock_pointer; //NEW
+  
   // don't initialize the heap_lock, since don't need to use it
   
   return p;
@@ -196,7 +194,7 @@ found:
   // trapret (in between the trapframe and the context), presumably for the user thread
   // forkret (in the instruction pointer of the context), presumably for the kernal thread
 }
-
+*/
 
 //PAGEBREAK: 32
 // Set up first user process.
@@ -237,38 +235,54 @@ userinit(void)
 }
 
 #define should_use_global_lock 0
+#define should_specific 1
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
 int
 growproc(int n)
 {
-  uint sz;
-  struct proc *curproc = myproc();
-  
-  #if should_use_global_lock
-	acquire(&ptable.all_heaps_lock); // actually, this line alone is enough to cause the panic
-  #endif
+	uint sz;
+	struct proc *curproc = myproc();
 
-  sz = curproc->sz;
-  if(n > 0){
-    if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
-      #if should_use_global_lock
-	  release(&ptable.all_heaps_lock);
-	  #endif
-      return -1;
-  } else if(n < 0){
-    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
-		#if should_use_global_lock
-		release(&ptable.all_heaps_lock);
-		#endif	
-      return -1;
-  }
-  curproc->sz = sz;
+	#if should_use_global_lock
+	acquire(&ptable.all_heaps_lock); // actually, this line alone is enough to cause the panic
+	#endif
+	#if should_specific
+	acquire(curproc->heap_lock_pointer);
+	#endif
+
+	sz = curproc->sz;
+	if(n > 0){
+		if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0){
+			#if should_use_global_lock
+			release(&ptable.all_heaps_lock);
+			#endif
+			#if should_specific
+			release(curproc->heap_lock_pointer);
+			#endif
+			return -1;
+		}
+	} else if(n < 0){
+		if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0){
+			#if should_use_global_lock
+			release(&ptable.all_heaps_lock);
+			#endif	
+			#if should_specific
+			release(curproc->heap_lock_pointer);
+			#endif
+		  return -1;
+		}
+	}
+	
+	curproc->sz = sz;
 	#if should_use_global_lock
 	release(&ptable.all_heaps_lock);
 	#endif
-  switchuvm(curproc);
-  return 0;
+	#if should_specific
+		release(curproc->heap_lock_pointer);
+	#endif
+	switchuvm(curproc);
+	return 0;
 }
 
 // Create a new process copying p as the parent.
@@ -285,6 +299,9 @@ fork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
+  np->is_thread = 0; //NEW
+  initlock(&np->heap_lock, "heap lock"); //NEW
+  np->heap_lock_pointer = &np->heap_lock; // NEW
   
   // Copy process state from proc.
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz, np)) == 0){
@@ -680,7 +697,7 @@ void call_kernal_version(void){
 int clone(void (*fcn) (void*), void *arg, void*stack){
 	// make a thread
 	
-	// based on fork
+	// based on fork (DIFF shows where they differ)
 	// basically, make a new process, but sharing the pgdir of the calling process
 	// and using the passed user stack
 	// with execution as if it had just called the function fcn with the arg arg
@@ -690,29 +707,31 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	struct proc *curproc = myproc();
 
 	// Allocate process.
-	if((np = allocthread()) == 0){
+	if((np = allocproc()) == 0){
 		cprintf("dog could not allocate a thread\n");
 		return -1;
 	}
+	np->is_thread = 1; //DIFF
+    np->heap_lock_pointer = curproc->heap_lock_pointer; //DIFF
 
-	np->pgdir = curproc->pgdir; // DIFFERENT: use the same pgdir, don't make a copy of it
+	np->pgdir = curproc->pgdir; // DIFF: use the same pgdir, don't make a copy of it
 	np->sz = curproc->sz; // ok b/c sz points to top of heap, and we're not messing with the heap, just the stack 
 	np->parent = curproc;
 	
 	*np->tf = *curproc->tf; // same as *(np->tf) // note: struct trapframe *tf;  
 	
-	np->tf->eip = (uint) fcn;  // ADDED
-	//~ np->tf->ebp = (uint) stack;  // ADDED
+	np->tf->eip = (uint) fcn;  // DIFF
+	//~ np->tf->ebp = (uint) stack;  // DIFF
 	
 	// put arg and return address into the stack (based on exec)
-	// stack points to the bottom of the stack (high memory end)
+		// stack points to the bottom of the stack (high memory end)
 	stack -= sizeof(uint);
 	*( (uint*) stack) = (uint) arg;
 
 	stack -= sizeof(uint);
 	*( (uint*) stack) = 0xffffffff; 
 
-	np->tf->esp = (uint) stack;  // ADDED
+	np->tf->esp = (uint) stack;  // DIFF
 
 	//shared memory info
 	for (i=0; i< NSH; i++){
@@ -725,11 +744,11 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	for(i = 0; i < NOFILE; i++)
 	if(curproc->ofile[i])
 	  //~ np->ofile[i] = filedup(curproc->ofile[i]);
-	  np->ofile[i] = curproc->ofile[i];
+	  np->ofile[i] = curproc->ofile[i]; //DIFF
 	//~ np->cwd = idup(curproc->cwd);
-	np->cwd = curproc->cwd;
+	np->cwd = curproc->cwd; //DIFF
 
-	safestrcpy(np->name, "thread", sizeof("thread")); // ADDED
+	safestrcpy(np->name, "thread", sizeof("thread")); // DIFF
 
 	pid = np->pid;
 
@@ -761,7 +780,7 @@ int join(int pid){
 			thread_child_with_given_pid_exists = 1;
 			if(p->state == ZOMBIE ){ 
 				// Found one.
-				kfree(p->kstack); // freeing memory
+				kfree(p->kstack);
 				p->kstack = 0;
 				//~ freevm(p->pgdir, p); // DIFFERENT: don't free user memory, cuz this is a thread
 				p->pid = 0;
