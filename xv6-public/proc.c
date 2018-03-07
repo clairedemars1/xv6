@@ -680,10 +680,10 @@ int clone(void (*fcn) (void*), void *arg, void*stack){
 	
 	for(i = 0; i < NOFILE; i++)
 	if(curproc->ofile[i])
-	  //~ np->ofile[i] = filedup(curproc->ofile[i]);
-	  np->ofile[i] = curproc->ofile[i]; //DIFF
-	//~ np->cwd = idup(curproc->cwd);
-	np->cwd = curproc->cwd; //DIFF
+	  np->ofile[i] = filedup(curproc->ofile[i]);
+	  //~ np->ofile[i] = curproc->ofile[i]; // I wanted to change this, but it broke stuff if I ran the same test multiple times
+	np->cwd = idup(curproc->cwd);
+	//~ np->cwd = curproc->cwd; //
 
 	safestrcpy(np->name, "thread", sizeof("thread")); // DIFF
 

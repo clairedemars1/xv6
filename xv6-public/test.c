@@ -237,7 +237,7 @@ void test_kernel_locks(){
 
 int main(void)
 {
-	printf(1, "%d version", 1);
+	printf(1, "%d version", 2);
 	//~ join_cleans_up_procs();
 	//~ when_main_process_calls_join_it_actually_waits();
 	make_two_threads(); 
