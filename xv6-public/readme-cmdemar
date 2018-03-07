@@ -6,23 +6,24 @@ Due 3/8/2018
 
 Changes Made:
 	- test code: test.c
+	
 	- sycall setup: user.h, syscall.h, syscall.c, sysproc.c, defs.h, proc.c
 	
 	- kthreads.h: in thread_create() allocating the stack (and calling clone) and in thread_join() freeing the stack (and calling join). Also, user locks.
 	- undo check for 0 in argptr() (since we need to pass NULL to system call clone via the producer function)
-	
-	- I put an is_thread flag in proc and made fork and clone set it appropriately
 	
 	- clone (in proc.c) is basically fork but shallow copies the pgdir, puts the arg in the stack, points the trapframe's sp and ip to the right places. It's also setting a heap-specific lock (and lock pointer), which work now (fork actually initializes that lock) )
 	
 	- kernel locks:
 	I locked growproc with a heap-specific lock stored in the proc.
 	 I couldn't get a failing test case, but left my attempt in the test code (test.c). I even tried adding a busy wait (for loop that does nothing) in growproc() to get the test to work, but it didn't :(
+	 Inexplicably, both types of kernel locks that I tried work now (one on all the heaps, the other on the single shared heap). You can toggle them in growproc. The old version (in git) still fails. Their code has not changed a whit, so it must be ought else.
 	
 	- join() (in proc.c) is basically wait() but looks for a specific thread, and doesn't free it's pgdir
 	
-	- wait now ignores non-threads (based on the is_thread flag)
+	- wait now ignores non-threads (based on the is_thread flag I put in proc and made fork and clone set appropriately)
 	
-	- exit has no changes: I wanted to make a change to avoid closing files if the proc was a thread, but that implies that I should make shallow copies of files in clone and doing so gave me an error (when I ran the test executable multiple times). Thus I made no changes.
+	- exit:
+	I went ahead and avoided closing files if the proc was a thread, but not sure how that jives with the way we copy file descriptors in clone (they don't seem shallow enough), but they instructions said not to change how they're copied (an admonition I missed, achieving a lovely bug)
 		
 

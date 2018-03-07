@@ -42,14 +42,22 @@ void print_procs(){
 	}
 }
 
+void do_nothing(void* arg){
+	exit();
+}
 
 void slow(void* arg){
-	printf(1, "\t slow ran with arg %d\n", *(int*)arg); 
+	printf(1, "\t slow is starting\n"); 
+
 	sleep(300);
+	printf(1, "\t slow is done\n"); 
+
 	exit();
 }
 
 void when_main_process_calls_join_it_actually_waits(){
+	printf(1, "NEW test\n");
+
     int i = 3;
     kthread_t thread = thread_create(slow, &i);
     // sleep(300); // necessary before join worked, to prevent lllll 
@@ -63,8 +71,10 @@ void fast(void* arg){
 }
 
 void join_cleans_up_procs(){
+	printf(1, "NEW test\n");
+
 	int i = 3;
-    kthread_t thread = thread_create(fast, &i);
+    kthread_t thread = thread_create(do_nothing, &i);
     print_procs();
     thread_join(thread);
     print_procs();
@@ -138,19 +148,18 @@ void consumer(void* arg)
 }
 
 void make_two_threads(){
+	printf(1, "NEW test\n");
+
 	int i = 3;
-	kthread_t t1 = thread_create(fast, &i);
-	kthread_t t2 = thread_create(fast, &i);
+	kthread_t t1 = thread_create(do_nothing, &i);
+	kthread_t t2 = thread_create(do_nothing, &i);
 	thread_join(t1);
 	thread_join(t2);
 }
 
-void do_nothing(void* arg){
-	exit();
-}
 
 void make_two_threads_in_sequence(){
-	printf(1, "make two threads in sequence\n");
+	printf(1, "NEW test\n");
 	int i = 3;
 	kthread_t t1 = thread_create(do_nothing, &i);
 	thread_join(t1);
@@ -159,7 +168,17 @@ void make_two_threads_in_sequence(){
 	thread_join(t2);
 } 
 
+void thread_can_reach_arg(){
+	printf(1, "NEW test\n");
+
+	int i = 3;
+	kthread_t t1 = thread_create(fast, &i);
+	thread_join(t1);
+}
+
 void orig_test(){
+	printf(1, "NEW test\n");
+
 	int i;
     init_lock(&lock);
     int indices[NUM_CONS];
@@ -219,6 +238,8 @@ void helper_test_kernel_locks(void* kernel_num){
 
 #define NUM_THREADS 50 // 75 is too big
 void test_kernel_locks(){
+	printf(1, "NEW test\n");
+
 	
 	// make a bunch of threads
 	int indices[NUM_THREADS];
@@ -237,13 +258,13 @@ int main(void)
 {
 	printf(1, "%d version\n");
 	
-	// the output for my own tests is kinda ugly
-	//~ join_cleans_up_procs();
-	//~ when_main_process_calls_join_it_actually_waits();
-	//~ make_two_threads(); 
-	//~ make_two_threads_in_sequence();
-	
-	orig_test();
-	//~ test_kernel_locks();
+	thread_can_reach_arg();
+	join_cleans_up_procs();
+	when_main_process_calls_join_it_actually_waits();
+	make_two_threads(); 
+	make_two_threads_in_sequence();
+	test_kernel_locks();
+
+	orig_test(); // TA's tests
     exit();
 }
