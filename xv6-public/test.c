@@ -27,6 +27,7 @@
 #include "user.h"
 #include "kthreads.h"
 #include "procinfo.h"
+#include "fcntl.h"
 
 #define LOCKS_ON 1
 #define NULL 0
@@ -254,16 +255,48 @@ void test_kernel_locks(){
 	}
 }
 
+
+
+void test_files(){
+	printf(1, "NEW test\n");
+	int fd;
+
+    // open file
+	fd = open("small", O_CREATE|O_RDWR);
+	if (fd < 0){
+		exit();
+	}
+	
+	// create and join thread
+	int i = 3;
+	kthread_t t1 = thread_create(do_nothing, &i);
+	thread_join(t1);
+	
+	// check can still get to file
+	if(write(fd, "aaaaaaaaaa", 10) != 10){
+	  printf(1, "error: write aa %d new file failed\n", i);
+	  exit();
+	}
+	close(fd);
+
+	if(unlink("small") < 0){
+		printf(1, "error: unlink small failed\n");
+		exit();
+	}
+	
+}
+
 int main(void)
 {
 	printf(1, "%d version\n");
 	
-	thread_can_reach_arg();
-	join_cleans_up_procs();
-	when_main_process_calls_join_it_actually_waits();
-	make_two_threads(); 
-	make_two_threads_in_sequence();
-	test_kernel_locks();
+	//~ thread_can_reach_arg();
+	//~ join_cleans_up_procs();
+	//~ when_main_process_calls_join_it_actually_waits();
+	//~ make_two_threads(); 
+	//~ make_two_threads_in_sequence();
+	//~ test_kernel_locks();
+	test_files(); 
 
 	orig_test(); // TA's tests
     exit();

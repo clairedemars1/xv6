@@ -291,14 +291,14 @@ exit(void)
     panic("init exiting");
 
   // Close all open files.
-  if ( !(curproc->is_thread) ){ //NEW
+  //~ if ( !(curproc->is_thread) ){ //NEW
 	  for(fd = 0; fd < NOFILE; fd++){
 		if(curproc->ofile[fd]){
 		  fileclose(curproc->ofile[fd]);
 		  curproc->ofile[fd] = 0;
 		}
 	  }
-  }
+  //~ }
 
   begin_op();
   iput(curproc->cwd);

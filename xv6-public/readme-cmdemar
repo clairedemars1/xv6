@@ -23,7 +23,8 @@ Changes Made:
 	
 	- wait now ignores non-threads (based on the is_thread flag I put in proc and made fork and clone set appropriately)
 	
-	- exit:
-	I went ahead and avoided closing files if the proc was a thread, but not sure how that jives with the way we copy file descriptors in clone (they don't seem shallow enough), but they instructions said not to change how they're copied (an admonition I missed, achieving a lovely bug)
+	- exit: no changes
+	I thought about avoiding closing files if the proc was a thread, but I did a file test (see test.c) without doing that, and got no problems, so I don't think it's necessary. 
+	It also didn't seem to jive with the way we copy file descriptors in clone (they don't seem shallow), and the instructions said not to change how they're copied (an admonition I missed, achieving a lovely bug)
 		
 
