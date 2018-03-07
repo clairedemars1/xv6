@@ -11,7 +11,7 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC]; // actually procs plural
-  //~ struct spinlock all_heaps_lock;
+  struct spinlock all_heaps_lock;
 } ptable;
 
 static struct proc *initproc;
@@ -26,7 +26,7 @@ void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
-  //~ initlock(&ptable.all_heaps_lock, "lock all heaps for sake of threads");
+  initlock(&ptable.all_heaps_lock, "lock all heaps for sake of threads");
 }
 
 // Must be called with interrupts disabled
@@ -169,8 +169,8 @@ userinit(void)
   release(&ptable.lock);
 }
 
-#define should_use_global_lock 0
-#define should_specific 0
+#define should_use_global_lock 0 // on Tues this caused panic, now it's fine
+#define should_specific 1
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
 int
@@ -180,12 +180,13 @@ growproc(int n)
 	struct proc *curproc = myproc();
 
 	#if should_use_global_lock
-	acquire(&ptable.all_heaps_lock); // actually, this line alone is enough to cause the panic
+	acquire(&ptable.all_heaps_lock); 
 	#endif
 	#if should_specific
 	acquire(curproc->heap_lock_pointer);
 	#endif
-
+	//~ int i; // trying to get kernel locks failing test case
+	//~ for(i=0; i<2000; i++);
 	sz = curproc->sz;
 	if(n > 0){
 		if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0){
@@ -290,14 +291,14 @@ exit(void)
     panic("init exiting");
 
   // Close all open files.
-  if ( !(curproc->is_thread) ){ //NEW
+  //~ if ( !(curproc->is_thread) ){ //NEW
 	  for(fd = 0; fd < NOFILE; fd++){
 		if(curproc->ofile[fd]){
 		  fileclose(curproc->ofile[fd]);
 		  curproc->ofile[fd] = 0;
 		}
 	  }
-  }
+  //~ }
 
   begin_op();
   iput(curproc->cwd);

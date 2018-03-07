@@ -1,26 +1,28 @@
 Claire DeMars
 Advanced OS
 Project 3
-Due 3/6/2018
+Due 3/8/2018
 
 
 Changes Made:
+	- test code: test.c
 	- sycall setup: user.h, syscall.h, syscall.c, sysproc.c, defs.h, proc.c
 	
-	- thread_lib.h: in thread_create() allocating the stack (and calling clone) and in thread_join() freeing the stack (and calling join). Also, user locks.
+	- kthreads.h: in thread_create() allocating the stack (and calling clone) and in thread_join() freeing the stack (and calling join). Also, user locks.
 	- undo check for 0 in argptr() (since we need to pass NULL to system call clone via the producer function)
-	
 	
 	- I put an is_thread flag in proc and made fork and clone set it appropriately
 	
-	- clone (in proc.c) is basically fork but shallow copies the pgdir and files, puts the arg in the stack, points the trapframe sp and ip to the right places. I also have it setting a heap-specific lock (and lock pointer) to show you how they fail (fork actually initializes that lock) )
+	- clone (in proc.c) is basically fork but shallow copies the pgdir, puts the arg in the stack, points the trapframe's sp and ip to the right places. It's also setting a heap-specific lock (and lock pointer), which work now (fork actually initializes that lock) )
 	
-	- kernel locks: The problem we talked about came back. In growproc(), there are vars you can toggle in growproc() to see them causing panic (both for all heaps and a specific heap)
+	- kernel locks:
+	I locked growproc with a heap-specific lock stored in the proc.
+	 I couldn't get a failing test case, but left my attempt in the test code (test.c). I even tried adding a busy wait (for loop that does nothing) in growproc() to get the test to work, but it didn't :(
 	
-	- join (in proc.c) is basically wait but looks for a specific thread, and doesn't free it's pgdir
+	- join() (in proc.c) is basically wait() but looks for a specific thread, and doesn't free it's pgdir
 	
 	- wait now ignores non-threads (based on the is_thread flag)
 	
-	- exit doesn't close files of threads
+	- exit has no changes: I wanted to make a change to avoid closing files if the proc was a thread, but that implies that I should make shallow copies of files in clone and doing so gave me an error (when I ran the test executable multiple times). Thus I made no changes.
 		
 

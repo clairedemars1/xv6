@@ -213,12 +213,11 @@ void helper_test_kernel_locks(void* kernel_num){
 		free(p);
 		exit();
 	}
-	// if not work, put sleep in growproc between things that should be atomic
 	free(p);
 	exit();
 }
 
-#define NUM_THREADS 10 // 10000 is too big
+#define NUM_THREADS 50 // 75 is too big
 void test_kernel_locks(){
 	
 	// make a bunch of threads
@@ -232,17 +231,19 @@ void test_kernel_locks(){
 	for(i=0; i<NUM_THREADS; i++){
 		thread_join(threads[i]);
 	}
-	
 }
 
 int main(void)
 {
-	printf(1, "%d version", 2);
+	printf(1, "%d version\n");
+	
+	// the output for my own tests is kinda ugly
 	//~ join_cleans_up_procs();
 	//~ when_main_process_calls_join_it_actually_waits();
-	make_two_threads(); 
+	//~ make_two_threads(); 
 	//~ make_two_threads_in_sequence();
-	//~ orig_test();
+	
+	orig_test();
 	//~ test_kernel_locks();
     exit();
 }
