@@ -11,7 +11,7 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC]; // actually procs plural
-  struct spinlock all_heaps_lock;
+  //~ struct spinlock all_heaps_lock;
 } ptable;
 
 static struct proc *initproc;
@@ -26,7 +26,7 @@ void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
-  initlock(&ptable.all_heaps_lock, "lock all heaps for sake of threads");
+  //~ initlock(&ptable.all_heaps_lock, "lock all heaps for sake of threads");
 }
 
 // Must be called with interrupts disabled
@@ -170,13 +170,12 @@ userinit(void)
 }
 
 #define should_use_global_lock 0
-#define should_specific 1
+#define should_specific 0
 // Grow current process's memory by n bytes.
 // Return 0 on success, -1 on failure.
 int
 growproc(int n)
 {
-	//~ cprintf("inside grow proc\n");
 	uint sz;
 	struct proc *curproc = myproc();
 
@@ -190,7 +189,6 @@ growproc(int n)
 	sz = curproc->sz;
 	if(n > 0){
 		if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0){
-			//~ cprintf("case 1\n");
 			#if should_use_global_lock
 			release(&ptable.all_heaps_lock);
 			#endif
@@ -201,7 +199,6 @@ growproc(int n)
 		}
 	} else if(n < 0){
 		if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0){
-			//~ cprintf("case 2\n");
 			#if should_use_global_lock
 			release(&ptable.all_heaps_lock);
 			#endif	
@@ -213,7 +210,6 @@ growproc(int n)
 		}
 	}
 	
-	//~ cprintf("case 3\n");
 	curproc->sz = sz;
 	#if should_use_global_lock
 	release(&ptable.all_heaps_lock);

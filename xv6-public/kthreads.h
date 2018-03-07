@@ -18,6 +18,7 @@ kthread_t thread_create( void (*start_routine) (void*), void* arg){
 
 	stack = malloc(2*PGSIZE);
 	if (!stack){ 
+		printf(1, "out of memory\n");
 		return to_return;
 	}
 	to_return.to_free = stack;
