@@ -290,13 +290,13 @@ int main(void)
 {
 	printf(1, "%d version\n");
 	
-	//~ thread_can_reach_arg();
-	//~ join_cleans_up_procs();
-	//~ when_main_process_calls_join_it_actually_waits();
-	//~ make_two_threads(); 
-	//~ make_two_threads_in_sequence();
-	//~ test_kernel_locks();
-	test_files(); 
+	thread_can_reach_arg();
+	join_cleans_up_procs();
+	when_main_process_calls_join_it_actually_waits();
+	make_two_threads(); 
+	make_two_threads_in_sequence();
+	test_kernel_locks();
+	test_files();
 
 	orig_test(); // TA's tests
     exit();
